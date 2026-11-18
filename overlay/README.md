@@ -8,7 +8,7 @@
 | Vuelvo enseguida | `brb.html` | Contador "Ausente". |
 | Fin del directo | `stream-ending.html` | Próximo directo + últimos 5 subs. |
 | Chat | `chat.html` | Transparente. Chat de Twitch de el_chachocanario suelto, para añadirlo a mano donde quieras (no va en ninguna escena; "Empezamos en breve" ya trae el suyo). Solo lectura, sin token. Oculta bots y comandos `!`, respeta los mensajes borrados por moderadores. `?test=1` mensajes de prueba. |
-| Alertas Twitch | `alerts.html` | Transparente. Sub nueva, resub, subs regaladas y bits, con estrellas/cristales y confeti en canvas. `?test=1` lanza alertas de prueba. |
+| Alertas Twitch | `alerts.html` | Transparente. Sub nueva, resub, subs regaladas y bits, con estrellas/cristales, confeti en canvas y sonido (`assets/sounds/alert_sound.mp3`; cámbialo o ajusta el volumen en `config.js` → `subs.alertSound` / `subs.alertVolume`). `?test=1` lanza alertas de prueba, `?mute=1` sin sonido. |
 
 Las tres pantallas completas abren con la **intro en canvas** (~4 s). `?intro=0` la salta.
 
@@ -45,7 +45,12 @@ El token caduca al cabo de un tiempo; si las alertas dejan de llegar, repite los
 3. En el panel abre **Conexión con OBS**, pega la contraseña y pulsa **Guardar y conectar** (o ponla en `config.js` → `obs.password`). Debe salir **Conectado** en verde.
 4. Escribe un nombre (vacío = aleatorio) y un mensaje si quieres, y pulsa un botón.
 
+**Sonido**: en la colección de OBS la fuente "Alertas Twitch (overlay)" tiene **Controlar audio mediante OBS** activado, así que sale en el mezclador, va al directo y la oyes por **Monitorizar y emitir**. Si tu monitorización va al mismo dispositivo que capturas como "Audio del escritorio", se oirá doble en el directo: cambia la fuente a **Solo emitir** (Propiedades avanzadas de audio).
+
 **Contar en últimos subs y objetivo**: sin marcar, solo se ve la alerta (para probar); marcado, la sub entra en los 5 últimos subs y suma al objetivo de `config.js` (si hay un objetivo de Twitch activo, ese no cambia). La alerta solo sale si la escena activa tiene "Alertas (no borrar)" (todas menos "Fin del directo").
+
+## Transición "Misión superada"
+La colección de OBS trae la transición **Misión superada** (un *stinger* solo de audio con `assets/sounds/everglades_mission_passed.mp3`) y la deja como transición activa: al cambiar de escena suena la música y la escena cambia a los 0,3 s. Dura lo que el sonido (~8 s) y mientras suena OBS no deja lanzar otra transición. Para volver a un fundido normal, elige **Desvanecimiento** en el panel de transiciones de escena. El momento del corte se cambia en las propiedades de la transición (o en `TRANSITION_POINT_MS` del script).
 
 ## Streamlabs Desktop (importar escenas)
 1. En Streamlabs Desktop: **Ajustes → Colecciones de escenas → Importar archivo de overlay** y elige `G:\obs\GTAVI\GTAVI-el_chachocanario.overlay`.
@@ -57,4 +62,5 @@ El token caduca al cabo de un tiempo; si las alertas dejan de llegar, repite los
 1. En OBS: **Colección de escenas → Importar** → botón **…** → elige `G:\obs\GTAVI\GTAVI-el_chachocanario-OBS.json` → marca la casilla → **Importar**.
 2. Luego **Colección de escenas → GTA VI · el_chachocanario** para activarla.
 3. Mismas 6 escenas que en Streamlabs (la webcam es la misma fuente en las dos escenas que la usan). En "En partida": abre las propiedades de **Webcam** y elige tu cámara (se ajusta sola al marco), y revisa que **Captura de juego** pilla GTA.
-4. Si mueves la carpeta, regenera con `python tools/build_obs_scene_collection.py`.
+4. La colección está hecha para un lienzo de **2560×1440**: en **Ajustes → Vídeo** pon la *Resolución base (lienzo)* a 2560x1440 (los HTML se escalan solos; para otro tamaño cambia `W, H` en el script).
+5. Si mueves la carpeta, regenera con `python tools/build_obs_scene_collection.py`.

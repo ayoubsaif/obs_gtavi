@@ -63,7 +63,7 @@
 /*
  * Alertas de Twitch: sub nueva, resub, subs regaladas y bits.
  * Datos: twitch.js (EventSub en directo si hay token en config.js, o eventos de StreamElements).
- * Prueba: ?test=1 (alertas de ejemplo cada 10 s, no tocan la lista real) · ?preview=1 fondo de juego.
+ * Prueba: ?test=1 (alertas de ejemplo cada 10 s, no tocan la lista real) · ?preview=1 fondo de juego · ?mute=1 sin sonido.
  */
 (function () {
   const { config, query } = Overlay;
@@ -74,6 +74,16 @@
   el.style.setProperty("--s", SCALE);
   const K = Math.max(.5, SCALE);            // particles shrink with the alert, but stay visible
   const queue = []; let busy = false;
+
+  // ---------- sound (config.js → subs.alertSound / subs.alertVolume; ?mute=1 silences it) ----------
+  const sound = S.alertSound === false || query.get("mute") === "1" ? null
+    : new Audio(S.alertSound || "../assets/sounds/alert_sound.mp3");
+  if (sound) { sound.preload = "auto"; sound.volume = Math.min(1, Math.max(0, S.alertVolume ?? .8)); }
+  function ding() {
+    if (!sound) return;
+    sound.currentTime = 0;
+    sound.play().catch(() => {});   // a normal browser may block autoplay until you click; OBS doesn't
+  }
 
   // ---------- canvas particles ----------
   const cv = document.getElementById("fx"), ctx = cv.getContext("2d");
@@ -141,6 +151,7 @@
     el.classList.toggle("huge", !!c.huge);
     el.classList.toggle("cheer", a.kind === "cheer");
     el.classList.remove("hide"); void el.offsetWidth; el.classList.add("show");
+    ding();
     burst(c.huge ? 220 : 110, a.kind);
     if (c.huge) setTimeout(() => burst(120, a.kind), 700);
     setTimeout(() => {
