@@ -1,0 +1,13 @@
+<!doctype html>
+<!-- "Empezamos en breve" with a webcam hole (560x315 at x=1300, y=589).
+     OBS/Streamlabs local files can't carry ?query, so this just forwards to starting-soon.html?cam=1
+     (keeps any extra params, e.g. starting-soon-cam.html?intro=0). -->
+<html lang="es" style="background:transparent">
+<head><meta charset="utf-8"><title>Empezamos en breve (cámara)</title>
+<script>
+  const p = new URLSearchParams(location.search); p.set("cam", "1");
+  location.replace("starting-soon.html?" + p + location.hash);
+</script>
+</head>
+<body></body>
+</html>

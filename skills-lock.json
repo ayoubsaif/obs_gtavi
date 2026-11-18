@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "twitch-overlay-generation": {
+      "source": "eachlabs/skills",
+      "commit": "7f1f4ff847078e6eb4dc8de9ee8252302571b953",
+      "sourceType": "github",
+      "skillPath": "skills/twitch-overlay-generation/SKILL.md",
+      "computedHash": "bf71d5526615df9e287303ca3d35a9d3f13d07ad9d5a1d51d151cdf9e58ab188"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Chat Twitch</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  html, body { background: transparent; }
+  body.preview { background: url("img/Jason_and_Lucia_03.jpg") center/cover; }
+
+  /* Same box as the chat card in ingame.html (x=40, y=480, 400x560) */
+  .chat-box {
+    position: absolute; left: 40px; top: 480px; width: 400px; height: 560px;
+    padding: 10px 14px 12px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 8px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 70px);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 70px);
+  }
+</style>
+</head>
+<body>
+<div class="chat-box" data-chat></div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>if (Overlay.query.get("preview") === "1") document.body.classList.add("preview");</script>
+<script src="chat.js"></script>
+</body>
+</html>

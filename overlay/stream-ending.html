@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fin del directo</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  .bg { background-image: url("img/Jason_and_Lucia_07.jpg"); background-position: 60% 25%; filter: saturate(1.1); }
+  .shade {
+    background:
+      linear-gradient(90deg, rgba(18,8,31,.95) 0%, rgba(42,24,70,.8) 34%, rgba(42,24,70,.1) 62%),
+      linear-gradient(0deg, rgba(18,8,31,.8) 0%, transparent 30%),
+      radial-gradient(ellipse at 80% 0%, rgba(255,79,163,.25), transparent 60%);
+  }
+  .copy { position: absolute; left: 120px; top: 150px; width: 950px; }
+  .copy .title { font-size: 124px; }
+  .copy .subtitle { margin-top: 26px; }
+  .cards { margin-top: 56px; display: flex; gap: 28px; }
+  .card { padding: 22px 30px; background: rgba(18,8,31,.72); border-top: 4px solid transparent; border-image: var(--sunset) 1; min-width: 360px; }
+  .card .lbl { font-size: 22px; font-weight: 700; letter-spacing: 6px; text-transform: uppercase; color: var(--orange); }
+  .card .val { margin-top: 8px; font-family: var(--display); font-size: 46px; letter-spacing: 1px; }
+  .card .val.cyan { color: var(--cyan); text-shadow: 0 0 14px rgba(63,242,255,.5); }
+  .support-card.end { position: static; margin-top: 28px; width: 782px; }
+</style>
+</head>
+<body data-intro-img="img/Jason_and_Lucia_07.jpg" data-intro-title="GRACIAS|POR VENIR">
+<div class="scene">
+  <div class="bg"></div>
+  <div class="shade"></div>
+  <div class="scanlines"></div>
+  <div class="grain"></div>
+
+  <div class="copy">
+    <div class="kicker rise">Y hasta aquí, Leonida</div>
+    <h1 class="title rise d1">Gracias<br>por venir</h1>
+    <div class="subtitle rise d2">Directo terminado · <span data-channel></span></div>
+    <div class="cards rise d3">
+      <div class="card"><div class="lbl">Próximo directo</div><div class="val" data-next></div></div>
+      <div class="card"><div class="lbl">No te lo pierdas</div><div class="val cyan">Dale a seguir</div></div>
+    </div>
+    <div class="support-card end rise d3">
+      <div class="lbl">Gracias a los subs del canal</div>
+      <div class="last-subs inline"></div>
+    </div>
+  </div>
+
+  <div class="socials"></div>
+</div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script src="twitch.js"></script>
+<script src="hero-intro.js"></script>
+</body>
+</html>

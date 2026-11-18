@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Overlay en partida</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  /* Transparent for OBS — everything outside the frames shows gameplay */
+  html, body { background: transparent; }
+
+  /* ---------- Webcam frame (bottom-right corner, 16:9, 288x162 at x=1604, y=890) ---------- */
+  .cam {
+    position: absolute; right: 28px; bottom: 28px; width: 288px; height: 162px;
+  }
+  .cam .frame {
+    position: absolute; inset: -5px; border-radius: 11px; padding: 5px;
+    background: conic-gradient(from var(--a, 0deg), var(--orange), var(--pink), var(--purple), var(--cyan), var(--orange));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    filter: drop-shadow(0 0 12px rgba(255,79,163,.7));
+    animation: spin 8s linear infinite;
+  }
+  @property --a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+  @keyframes spin { to { --a: 360deg; } }
+  .cam .corner { position: absolute; width: 24px; height: 24px; border: 3px solid var(--white); }
+  .cam .tl { left: -12px; top: -12px; border-right: 0; border-bottom: 0; }
+  .cam .br { right: -12px; bottom: -12px; border-left: 0; border-top: 0; }
+  .cam .label {
+    position: absolute; left: 14px; top: -22px; padding: 4px 14px 4px 11px; white-space: nowrap;
+    background: var(--ink); border-left: 4px solid var(--pink);
+    font-family: var(--display); font-size: 19px; letter-spacing: 1.5px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cam .label .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 10px var(--hot); }
+  .cam .script { position: absolute; right: 12px; bottom: 6px; white-space: nowrap; font-family: var(--script); font-size: 30px; color: var(--cyan);
+                 text-shadow: 0 0 12px rgba(63,242,255,.8), 0 2px 0 var(--ink); transform: rotate(-4deg); }
+
+  /* ---------- Top-left: now playing + clock ---------- */
+  .hud { position: absolute; left: 40px; top: 36px; display: flex; align-items: stretch;
+         background: rgba(18,8,31,.78); border-bottom: 3px solid transparent; border-image: var(--sunset) 1; }
+  .hud .cell { padding: 10px 22px; display: flex; flex-direction: column; justify-content: center; }
+  .hud .cell + .cell { border-left: 1px solid rgba(255,255,255,.15); }
+  .hud .k { font-size: 16px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--orange); }
+  .hud .v { font-family: var(--display); font-size: 30px; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Top-right: recent event ticker card ---------- */
+  .event { position: absolute; right: 40px; top: 36px; min-width: 380px; padding: 10px 22px;
+           background: rgba(18,8,31,.78); border-right: 6px solid var(--cyan); text-align: right; }
+  .event .k { font-size: 16px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); }
+  .event .v { font-family: var(--display); font-size: 30px; letter-spacing: 1px; transition: opacity .4s; }
+
+  body.preview { background: url("img/Jason_and_Lucia_03.jpg") center/cover; }
+</style>
+</head>
+<body>
+  <div class="hud" id="hud">
+    <div class="cell"><span class="k">Jugando a</span><span class="v" data-game></span></div>
+    <div class="cell"><span class="k">Hora local</span><span class="v" id="clock">--:--</span></div>
+    <div class="cell"><span class="k">En directo</span><span class="v" id="uptime">00:00</span></div>
+  </div>
+
+  <div class="event" id="news"><div class="k">Noticias de Leonida</div><div class="v" id="msg"></div></div>
+
+  <div class="cam">
+    <div class="frame"></div>
+    <div class="corner tl"></div><div class="corner br"></div>
+    <div class="label"><span class="dot pulse"></span><span data-channel></span></div>
+    <div class="script">Vice City</div>
+  </div>
+
+<script src="config.js"></script>
+<script src="common.js"></script>
+<script>
+  const { config, query, fmt, pad } = Overlay;
+  // top-left bar and "Noticias de Leonida" are hidden unless asked for (?hud=1, ?news=1)
+  const showNews = query.get("news") === "1";
+  if (query.get("hud") !== "1") document.getElementById("hud").remove();
+  if (!showNews) document.getElementById("news").remove();
+  if (query.get("preview") === "1") document.body.classList.add("preview");
+
+  const start = Date.now();
+  const clock = document.getElementById("clock") || {}, up = document.getElementById("uptime") || {};
+  setInterval(() => {
+    const d = new Date(); clock.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    up.textContent = fmt((Date.now() - start) / 1000);
+  }, 1000);
+
+  const msgs = config.tickerMessages || [], el = document.getElementById("msg"); let i = 0;
+  function rotate() { if (!el) return; if (!msgs.length) { el.parentNode.remove(); return; }
+    el.style.opacity = 0; setTimeout(() => { el.textContent = msgs[i++ % msgs.length]; el.style.opacity = 1; }, 400); }
+  rotate(); setInterval(rotate, 9000);
+</script>
+</body>
+</html>

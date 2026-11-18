@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control de alertas</title>
+<!--
+  Panel para OBS (Docks → Docks de navegador personalizados), URL:
+    file:///G:/obs/GTAVI/overlay/control.html
+  Lanza alertas en alerts.html a través del servidor WebSocket de OBS
+  (Herramientas → Ajustes del servidor WebSocket → Activar).
+  Ruta: este panel → obs-websocket → CallVendorRequest "obs-browser" emit_event "gta6-alert"
+        → evento window "gta6-alert" en todas las fuentes de navegador → twitch.js.
+-->
+<style>
+  :root {
+    --bg: #12081f; --panel: #1d1030; --line: #3a2560; --text: #fff7fb; --muted: #b9a8d6;
+    --pink: #ff4fa3; --orange: #ffb15e; --purple: #6b4fe0; --cyan: #3ff2ff; --ok: #4ade80; --bad: #ff6b6b;
+    --sunset: linear-gradient(100deg, var(--orange), var(--pink) 45%, var(--purple));
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); }
+  body { font: 14px/1.35 "Segoe UI", system-ui, sans-serif; padding: 10px; min-width: 220px; }
+  h1 { font-size: 15px; font-weight: 700; letter-spacing: .5px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  h1::before { content: ""; width: 4px; height: 18px; background: var(--sunset); border-radius: 2px; }
+  .status { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); }
+  .status.on .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .status.on { color: var(--ok); }
+
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input[type=text], input[type=number], input[type=password] {
+    width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 8px; font: inherit; }
+  input:focus { outline: 2px solid var(--purple); outline-offset: -1px; }
+  .field + .field { margin-top: 8px; }
+
+  .row { display: flex; gap: 6px; align-items: center; }
+  .row + .row { margin-top: 6px; }
+  .row input[type=number] { width: 70px; flex: none; }
+  .row .grow { flex: 1; }
+  button { flex: 1; min-height: 34px; border: 0; border-radius: 6px; cursor: pointer; font: 600 13px/1 inherit;
+           font-family: inherit; color: var(--text); background: #2c1a4a; border: 1px solid var(--line); }
+  button:hover { background: #3a2462; }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.sub   { background: linear-gradient(100deg, #c2337f, #6b4fe0); border-color: transparent; }
+  button.gift  { background: linear-gradient(100deg, #e08a2e, #c2337f); border-color: transparent; }
+  button.bits  { background: linear-gradient(100deg, #1fa7b5, #6b4fe0); border-color: transparent; }
+  button.sub:hover, button.gift:hover, button.bits:hover { filter: brightness(1.15); }
+  .unit { font-size: 12px; color: var(--muted); flex: none; }
+
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text); cursor: pointer; margin: 0; }
+  .check input { margin-top: 2px; accent-color: var(--pink); }
+  .check small { display: block; color: var(--muted); font-size: 11px; }
+
+  .log { font-size: 12px; color: var(--muted); min-height: 1.4em; }
+  .log.err { color: var(--bad); }
+
+  details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+  details[open] summary { margin-bottom: 8px; }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>Alertas GTA VI <span class="status" id="status"><span class="dot"></span><span id="statusText">Desconectado</span></span></h1>
+
+<section>
+  <div class="field">
+    <label for="name">Nombre (vacío = aleatorio)</label>
+    <input type="text" id="name" maxlength="25" placeholder="Lucia_Fan" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="message">Mensaje (resub y bits, opcional)</label>
+    <input type="text" id="message" maxlength="160" placeholder="¡Un año más en Leonida! 🌴" autocomplete="off">
+  </div>
+</section>
+
+<section>
+  <div class="row">
+    <button class="sub" data-kind="sub" data-tier="1000">Sub</button>
+    <button class="sub" data-kind="sub" data-tier="2000">Nivel 2</button>
+    <button class="sub" data-kind="sub" data-tier="3000">Nivel 3</button>
+  </div>
+  <div class="row">
+    <input type="number" id="months" min="2" max="120" value="6" aria-label="Meses">
+    <span class="unit">meses</span>
+    <button class="sub grow" data-kind="resub">Resub</button>
+  </div>
+  <div class="row">
+    <input type="number" id="count" min="1" max="100" value="5" aria-label="Subs regaladas">
+    <span class="unit">subs</span>
+    <button class="gift grow" data-kind="gift">Regalo</button>
+  </div>
+  <div class="row">
+    <input type="number" id="bits" min="1" max="100000" value="500" aria-label="Bits">
+    <span class="unit">bits</span>
+    <button class="bits grow" data-kind="cheer">Bits</button>
+  </div>
+</section>
+
+<section>
+  <label class="check"><input type="checkbox" id="record">
+    <span>Contar en últimos subs y objetivo<small>Sin marcar: solo se ve la alerta (para probar). Si hay un objetivo de Twitch activo, el objetivo no cambia.</small></span>
+  </label>
+</section>
+
+<div class="log" id="log" role="status"></div>
+
+<section style="margin-top:8px">
+  <details id="settings">
+    <summary>Conexión con OBS</summary>
+    <div class="row">
+      <div class="grow"><label for="host">Host</label><input type="text" id="host" value="localhost"></div>
+      <div><label for="port">Puerto</label><input type="number" id="port" value="4455" style="width:80px"></div>
+    </div>
+    <div class="field" style="margin-top:8px">
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" autocomplete="off">
+    </div>
+    <div class="row" style="margin-top:8px"><button id="save">Guardar y conectar</button></div>
+    <p class="hint">En OBS: Herramientas → Ajustes del servidor WebSocket → Activar. "Mostrar información de conexión" da la contraseña.</p>
+  </details>
+</section>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  const CFG = window.OVERLAY_CONFIG || {};
+  const SAMPLE = ["Lucia_Fan", "ViceCityVIP", "JasonDuval_ES", "LeonidaKing", "PalmeraNeon", "NeonFlamingo", "OceanDrive_86"];
+  const $ = id => document.getElementById(id);
+  const PREFS = "gta6-overlay.dock.v1";
+
+  // ---------- connection settings: config.js (obs: {...}) → overridden by what is saved in this dock ----------
+  let conn = Object.assign({ host: "localhost", port: 4455, password: "" }, CFG.obs || {});
+  try { Object.assign(conn, JSON.parse(localStorage.getItem(PREFS) || "{}")); } catch (e) {}
+  $("host").value = conn.host; $("port").value = conn.port; $("password").value = conn.password;
+  try { $("record").checked = localStorage.getItem(PREFS + ".record") === "1"; } catch (e) {}
+  $("record").addEventListener("change", () => { try { localStorage.setItem(PREFS + ".record", $("record").checked ? "1" : "0"); } catch (e) {} });
+
+  // ---------- obs-websocket v5 ----------
+  let ws = null, ready = false, retry = 0, retryTimer = null, reqId = 0;
+  const pending = new Map();
+
+  function setStatus(on, text) {
+    ready = on;
+    $("status").classList.toggle("on", on);
+    $("statusText").textContent = text;
+    document.querySelectorAll("button[data-kind]").forEach(b => b.disabled = !on);
+  }
+  function log(text, err) { $("log").textContent = text; $("log").classList.toggle("err", !!err); }
+
+  async function sha256b64(s) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+
+  function connect() {
+    clearTimeout(retryTimer);
+    if (ws) { ws.onclose = null; ws.close(); }
+    setStatus(false, "Conectando…");
+    let authFailed = false;
+    ws = new WebSocket(`ws://${conn.host}:${conn.port}`);
+    ws.onmessage = async msg => {
+      const m = JSON.parse(msg.data);
+      if (m.op === 0) {                                   // Hello
+        const identify = { rpcVersion: 1, eventSubscriptions: 0 };
+        const auth = m.d.authentication;
+        if (auth) {
+          if (!conn.password) { authFailed = true; setStatus(false, "Falta contraseña"); $("settings").open = true; ws.close(); return; }
+          identify.authentication = await sha256b64(await sha256b64(conn.password + auth.salt) + auth.challenge);
+        }
+        ws.send(JSON.stringify({ op: 1, d: identify }));
+      } else if (m.op === 2) {                            // Identified
+        retry = 0; setStatus(true, "Conectado");
+      } else if (m.op === 7) {                            // RequestResponse
+        const cb = pending.get(m.d.requestId); pending.delete(m.d.requestId);
+        if (cb) cb(m.d.requestStatus);
+      }
+    };
+    ws.onclose = e => {
+      if (e.code === 4009) { authFailed = true; setStatus(false, "Contraseña incorrecta"); $("settings").open = true; }
+      else if (!authFailed) setStatus(false, "Desconectado");
+      if (authFailed) return;                             // wait for new settings
+      retryTimer = setTimeout(connect, Math.min(30, 2 ** retry++) * 1000);
+    };
+  }
+
+  function request(requestType, requestData) {
+    return new Promise(resolve => {
+      const requestId = "r" + (++reqId);
+      pending.set(requestId, resolve);
+      ws.send(JSON.stringify({ op: 6, d: { requestType, requestId, requestData } }));
+      setTimeout(() => { if (pending.delete(requestId)) resolve({ result: false, comment: "OBS no responde" }); }, 4000);
+    });
+  }
+
+  // ---------- alerts ----------
+  const tierName = t => t === "3000" ? "Nivel 3" : t === "2000" ? "Nivel 2" : "Sub";
+  const clampInt = (v, lo, hi, d) => { v = parseInt(v, 10); return isNaN(v) ? d : Math.min(hi, Math.max(lo, v)); };
+
+  async function fire(btn) {
+    if (!ready) return;
+    const kind = btn.dataset.kind;
+    const name = $("name").value.trim() || SAMPLE[(Math.random() * SAMPLE.length) | 0];
+    const message = $("message").value.trim();
+    const a = { kind, name, record: $("record").checked, id: Date.now() + "-" + Math.random().toString(36).slice(2, 7) };
+    let what;
+    if (kind === "sub")   { a.tier = btn.dataset.tier; what = tierName(a.tier); }
+    if (kind === "resub") { a.tier = "1000"; a.months = clampInt($("months").value, 2, 120, 6); a.message = message; what = `resub ${a.months} meses`; }
+    if (kind === "gift")  { a.tier = "1000"; a.count = clampInt($("count").value, 1, 100, 5); what = `regalo de ${a.count}`; }
+    if (kind === "cheer") { a.bits = clampInt($("bits").value, 1, 100000, 500); a.message = message; what = `${a.bits} bits`; }
+    btn.disabled = true;
+    const st = await request("CallVendorRequest", {
+      vendorName: "obs-browser", requestType: "emit_event",
+      requestData: { event_name: "gta6-alert", event_data: a }
+    });
+    btn.disabled = !ready;
+    if (st && st.result) log(`✓ ${what} · ${name}${a.record ? " (contado)" : ""}`);
+    else log("✗ " + ((st && st.comment) || "Error al enviar"), true);
+  }
+
+  document.querySelectorAll("button[data-kind]").forEach(b => b.addEventListener("click", () => fire(b)));
+  $("save").addEventListener("click", () => {
+    conn = { host: $("host").value.trim() || "localhost", port: clampInt($("port").value, 1, 65535, 4455), password: $("password").value };
+    try { localStorage.setItem(PREFS, JSON.stringify(conn)); } catch (e) {}
+    retry = 0; connect();
+  });
+
+  setStatus(false, "Desconectado");
+  connect();
+})();
+</script>
+</body>
+</html>
