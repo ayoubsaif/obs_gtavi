@@ -25,7 +25,7 @@
     "sources": [
         {
             "name": "Alertas Twitch (overlay)",
-            "uuid": "e7e057a3-128f-4af4-a2be-75551039d1a8",
+            "uuid": "95c59071-b9d5-4325-8a32-f28e533b6174",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -60,17 +60,44 @@
             "prev_ver": 553648129
         },
         {
+            "name": "Navegador",
+            "uuid": "f0028032-d15d-454c-93d0-adb5d78ddf1a",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": ""
+            },
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1.0,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "filters": [],
+            "prev_ver": 553648129
+        },
+        {
             "name": "GTA VI · Alertas (no borrar)",
-            "uuid": "f81eda9c-089d-4728-943d-18898f127f0a",
+            "uuid": "d94e8aab-ae62-4981-b6c0-d6f1740ac18c",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 1,
+                "id_counter": 2,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Alertas Twitch (overlay)",
-                        "source_uuid": "e7e057a3-128f-4af4-a2be-75551039d1a8",
+                        "source_uuid": "95c59071-b9d5-4325-8a32-f28e533b6174",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -105,6 +132,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Navegador",
+                        "source_uuid": "f0028032-d15d-454c-93d0-adb5d78ddf1a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 1016.0,
+                            "y": 141.0
+                        },
+                        "scale": {
+                            "x": 0.66,
+                            "y": 0.66
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 2,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -130,13 +195,45 @@
             "monitoring_enabled": false
         },
         {
-            "name": "Captura de juego",
-            "uuid": "62f5fcaa-bd5a-4749-8417-32f3f4f9abbf",
-            "id": "game_capture",
-            "versioned_id": "game_capture",
+            "name": "Dispositivo de captura de video",
+            "uuid": "fb44a672-9a57-4c89-8701-300c389c6f02",
+            "id": "dshow_input",
+            "versioned_id": "dshow_input",
             "settings": {
-                "capture_mode": "any_fullscreen",
-                "capture_cursor": false
+                "video_device_id": "AVerMedia HD Capture GC573 1:\\\\?\\pci#22ven_1461&dev_0054&subsys_57301461&rev_00#220000000101000a3500#22{65e8773d-8f56-11d0-a3b9-00a0c9223196}\\{adef4cb5-1401-4177-84ee-fe8b26c13a5b}",
+                "last_video_device_id": "AVerMedia HD Capture GC573 1:\\\\?\\pci#22ven_1461&dev_0054&subsys_57301461&rev_00#220000000101000a3500#22{65e8773d-8f56-11d0-a3b9-00a0c9223196}\\{adef4cb5-1401-4177-84ee-fe8b26c13a5b}",
+                "res_type": 1,
+                "resolution": "2560x1440",
+                "last_resolution": "2560x1440",
+                "video_format": 301
+            },
+            "mixers": 255,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1.0,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "filters": [],
+            "prev_ver": 553648129
+        },
+        {
+            "name": "Webcam",
+            "uuid": "7bafe553-ddcd-4cbf-b355-6c1594738e0e",
+            "id": "dshow_input",
+            "versioned_id": "dshow_input",
+            "settings": {
+                "video_device_id": "Camera (NVIDIA Broadcast):",
+                "last_video_device_id": "Camera (NVIDIA Broadcast):"
             },
             "mixers": 0,
             "sync": 0,
@@ -158,12 +255,14 @@
             "prev_ver": 553648129
         },
         {
-            "name": "Webcam",
-            "uuid": "3de313fc-84d0-4ee7-8582-da50bd49f302",
-            "id": "dshow_input",
-            "versioned_id": "dshow_input",
-            "settings": {},
-            "mixers": 0,
+            "name": "Broadcast",
+            "uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+            "id": "wasapi_input_capture",
+            "versioned_id": "wasapi_input_capture",
+            "settings": {
+                "device_id": "{0.0.1.00000000}.{729d104f-8176-4775-ad6d-f2899c0b6250}"
+            },
+            "mixers": 255,
             "sync": 0,
             "flags": 0,
             "volume": 1.0,
@@ -184,7 +283,7 @@
         },
         {
             "name": "Empezamos en breve (overlay)",
-            "uuid": "48fcfc6e-c17b-4749-a616-691513c5cb77",
+            "uuid": "a3d028b3-35ae-4e77-a8a2-f64177949356",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -220,16 +319,16 @@
         },
         {
             "name": "GTA VI · Empezamos en breve",
-            "uuid": "af6ec25d-f29a-426b-a189-4a615df5f5de",
+            "uuid": "d06a6ce0-c4d4-4766-a24d-598a20818fef",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 2,
+                "id_counter": 3,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Empezamos en breve (overlay)",
-                        "source_uuid": "48fcfc6e-c17b-4749-a616-691513c5cb77",
+                        "source_uuid": "a3d028b3-35ae-4e77-a8a2-f64177949356",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -267,7 +366,7 @@
                     },
                     {
                         "name": "GTA VI · Alertas (no borrar)",
-                        "source_uuid": "f81eda9c-089d-4728-943d-18898f127f0a",
+                        "source_uuid": "d94e8aab-ae62-4981-b6c0-d6f1740ac18c",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -302,6 +401,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcast",
+                        "source_uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 3,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -328,7 +465,7 @@
         },
         {
             "name": "Empezamos en breve con cámara (overlay)",
-            "uuid": "e2f0aade-c413-46ec-bb77-3dfe058f0a91",
+            "uuid": "4fa7727e-849d-4ae9-8b2d-7290488837c5",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -364,16 +501,16 @@
         },
         {
             "name": "GTA VI · Empezamos en breve (cámara)",
-            "uuid": "fa7b6239-d34e-4de1-85ae-daf820bf81c1",
+            "uuid": "d5cc93a1-3cc5-4cbe-a712-1320baaaff36",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 3,
+                "id_counter": 4,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Webcam",
-                        "source_uuid": "3de313fc-84d0-4ee7-8582-da50bd49f302",
+                        "source_uuid": "7bafe553-ddcd-4cbf-b355-6c1594738e0e",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -411,7 +548,7 @@
                     },
                     {
                         "name": "Empezamos en breve con cámara (overlay)",
-                        "source_uuid": "e2f0aade-c413-46ec-bb77-3dfe058f0a91",
+                        "source_uuid": "4fa7727e-849d-4ae9-8b2d-7290488837c5",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -449,7 +586,7 @@
                     },
                     {
                         "name": "GTA VI · Alertas (no borrar)",
-                        "source_uuid": "f81eda9c-089d-4728-943d-18898f127f0a",
+                        "source_uuid": "d94e8aab-ae62-4981-b6c0-d6f1740ac18c",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -484,6 +621,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcast",
+                        "source_uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 4,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -510,7 +685,7 @@
         },
         {
             "name": "Marco en partida (overlay)",
-            "uuid": "6fee6fc4-5307-4a36-8323-18a6129671fc",
+            "uuid": "809b4ac0-9c95-4c3d-a463-cf449aa97a4b",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -546,16 +721,16 @@
         },
         {
             "name": "GTA VI · En partida",
-            "uuid": "12355f64-f01a-4147-926c-e9f10f22fed4",
+            "uuid": "8f76f398-01dd-4fab-9b40-9bf69beb4f1e",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 4,
+                "id_counter": 5,
                 "custom_size": false,
                 "items": [
                     {
-                        "name": "Captura de juego",
-                        "source_uuid": "62f5fcaa-bd5a-4749-8417-32f3f4f9abbf",
+                        "name": "Dispositivo de captura de video",
+                        "source_uuid": "fb44a672-9a57-4c89-8701-300c389c6f02",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -568,11 +743,11 @@
                             "y": 1.0
                         },
                         "align": 5,
-                        "bounds_type": 2,
+                        "bounds_type": 0,
                         "bounds_align": 0,
                         "bounds": {
-                            "x": 2560.0,
-                            "y": 1440.0
+                            "x": 0.0,
+                            "y": 0.0
                         },
                         "crop_left": 0,
                         "crop_top": 0,
@@ -584,16 +759,16 @@
                         "blend_method": "default",
                         "blend_type": "normal",
                         "show_transition": {
-                            "duration": 0
+                            "duration": 300
                         },
                         "hide_transition": {
-                            "duration": 0
+                            "duration": 300
                         },
                         "private_settings": {}
                     },
                     {
                         "name": "Webcam",
-                        "source_uuid": "3de313fc-84d0-4ee7-8582-da50bd49f302",
+                        "source_uuid": "7bafe553-ddcd-4cbf-b355-6c1594738e0e",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -631,7 +806,7 @@
                     },
                     {
                         "name": "Marco en partida (overlay)",
-                        "source_uuid": "6fee6fc4-5307-4a36-8323-18a6129671fc",
+                        "source_uuid": "809b4ac0-9c95-4c3d-a463-cf449aa97a4b",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -669,7 +844,7 @@
                     },
                     {
                         "name": "GTA VI · Alertas (no borrar)",
-                        "source_uuid": "f81eda9c-089d-4728-943d-18898f127f0a",
+                        "source_uuid": "d94e8aab-ae62-4981-b6c0-d6f1740ac18c",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -704,6 +879,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcast",
+                        "source_uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 5,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -730,7 +943,7 @@
         },
         {
             "name": "Vuelvo enseguida (overlay)",
-            "uuid": "b4d275de-7ef9-4036-80af-da450080fcbd",
+            "uuid": "0272313b-b094-459c-a5fc-a7b13e88876b",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -766,16 +979,16 @@
         },
         {
             "name": "GTA VI · Vuelvo enseguida",
-            "uuid": "6caf7c6f-63ad-422b-85a6-bc923e6b2f69",
+            "uuid": "a51f232c-700f-4748-b9cc-a5e522a163e8",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 2,
+                "id_counter": 3,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Vuelvo enseguida (overlay)",
-                        "source_uuid": "b4d275de-7ef9-4036-80af-da450080fcbd",
+                        "source_uuid": "0272313b-b094-459c-a5fc-a7b13e88876b",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -813,7 +1026,7 @@
                     },
                     {
                         "name": "GTA VI · Alertas (no borrar)",
-                        "source_uuid": "f81eda9c-089d-4728-943d-18898f127f0a",
+                        "source_uuid": "d94e8aab-ae62-4981-b6c0-d6f1740ac18c",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -848,6 +1061,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcast",
+                        "source_uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 3,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -874,7 +1125,7 @@
         },
         {
             "name": "Fin del directo (overlay)",
-            "uuid": "df29122a-93bf-45fc-ae53-8cf9857adeaf",
+            "uuid": "d06ec70f-9479-4365-a54e-f9a20931512e",
             "id": "browser_source",
             "versioned_id": "browser_source",
             "settings": {
@@ -910,16 +1161,16 @@
         },
         {
             "name": "GTA VI · Fin del directo",
-            "uuid": "bf18b98f-15b9-440d-835b-e1dc6b0d57ee",
+            "uuid": "8b86fc17-0755-47a7-bcf7-9f95daadded0",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 1,
+                "id_counter": 2,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Fin del directo (overlay)",
-                        "source_uuid": "df29122a-93bf-45fc-ae53-8cf9857adeaf",
+                        "source_uuid": "d06ec70f-9479-4365-a54e-f9a20931512e",
                         "visible": true,
                         "locked": false,
                         "rot": 0.0,
@@ -954,6 +1205,44 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcast",
+                        "source_uuid": "b0a32c6e-1cca-41ab-86e5-a2244de4cd3a",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "pos": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale": {
+                            "x": 1.0,
+                            "y": 1.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 2,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 300
+                        },
+                        "hide_transition": {
+                            "duration": 300
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -982,20 +1271,19 @@
     "groups": [],
     "transitions": [
         {
-            "name": "Misión superada",
+            "name": "Logo GTA VI",
             "id": "obs_stinger_transition",
             "settings": {
-                "path": "G:/obs/GTAVI/assets/sounds/everglades_mission_passed.mp3",
+                "path": "G:/obs/GTAVI/assets/transitions/gtavi_logo_stinger.webm",
                 "transition_point_type": 0,
-                "transition_point": 300,
-                "audio_monitoring": 2,
-                "audio_fade_style": 0,
+                "transition_point": 400,
+                "audio_fade_style": 1,
                 "preload": true,
                 "hw_decode": false
             }
         }
     ],
-    "current_transition": "Misión superada",
+    "current_transition": "Logo GTA VI",
     "transition_duration": 400,
     "quick_transitions": [],
     "saved_projectors": [],
@@ -1004,6 +1292,9 @@
     "scaling_level": 0,
     "scaling_off_x": 0.0,
     "scaling_off_y": 0.0,
+    "virtual-camera": {
+        "type2": 3
+    },
     "modules": {},
     "version": 2,
     "canvases": []

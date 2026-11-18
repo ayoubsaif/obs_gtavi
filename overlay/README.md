@@ -49,8 +49,10 @@ El token caduca al cabo de un tiempo; si las alertas dejan de llegar, repite los
 
 **Contar en últimos subs y objetivo**: sin marcar, solo se ve la alerta (para probar); marcado, la sub entra en los 5 últimos subs y suma al objetivo de `config.js` (si hay un objetivo de Twitch activo, ese no cambia). La alerta solo sale si la escena activa tiene "Alertas (no borrar)" (todas menos "Fin del directo").
 
-## Transición "Misión superada"
-La colección de OBS trae la transición **Misión superada** (un *stinger* solo de audio con `assets/sounds/everglades_mission_passed.mp3`) y la deja como transición activa: al cambiar de escena suena la música y la escena cambia a los 0,3 s. Dura lo que el sonido (~8 s) y mientras suena OBS no deja lanzar otra transición. Para volver a un fundido normal, elige **Desvanecimiento** en el panel de transiciones de escena. El momento del corte se cambia en las propiedades de la transición (o en `TRANSITION_POINT_MS` del script).
+## Transición "Logo GTA VI"
+La colección de OBS trae la transición **Logo GTA VI** (un *stinger* sin sonido, `assets/transitions/gtavi_logo_stinger.webm`, 0,95 s con transparencia) y la deja como transición activa para todas las escenas, también **En partida**: un panel oscuro con franjas de atardecer entra desde la derecha, aparece el logo de GTA VI, la escena cambia a los 0,4 s (con el panel cerrado) y el panel sale por la izquierda. El audio de las escenas se funde. Para cambiar la animación edita y ejecuta `tools/build_logo_stinger.py` (necesita `pip install pillow imageio-ffmpeg`); el momento del corte está en `TRANSITION_POINT_MS` de `tools/build_obs_scene_collection.py`.
+
+**Si ya tienes la colección importada** y no quieres volver a importarla: en el panel *Transiciones de escena* pulsa **+ → Stinger**, ponle de nombre *Logo GTA VI*, en *Archivo de vídeo* elige `assets/transitions/gtavi_logo_stinger.webm`, *Tipo de punto de transición* = Tiempo, *Punto de transición* = 400 ms, y selecciónala. Borra la antigua *Misión superada*.
 
 ## Streamlabs Desktop (importar escenas)
 1. En Streamlabs Desktop: **Ajustes → Colecciones de escenas → Importar archivo de overlay** y elige `G:\obs\GTAVI\GTAVI-el_chachocanario.overlay`.
@@ -59,8 +61,15 @@ La colección de OBS trae la transición **Misión superada** (un *stinger* solo
 4. Revisa en "En partida" que la webcam y la captura de juego usan tu cámara y tu juego.
 
 ## OBS Studio (importar colección de escenas)
-1. En OBS: **Colección de escenas → Importar** → botón **…** → elige `G:\obs\GTAVI\GTAVI-el_chachocanario-OBS.json` → marca la casilla → **Importar**.
+1. En OBS: **Colección de escenas → Importar** → botón **…** → elige `GTAVI-el_chachocanario-OBS.local.json` (lleva las URL privadas, ver abajo; si no existe, `GTAVI-el_chachocanario-OBS.json`) → marca la casilla → **Importar**.
 2. Luego **Colección de escenas → GTA VI · el_chachocanario** para activarla.
-3. Mismas 6 escenas que en Streamlabs (la webcam es la misma fuente en las dos escenas que la usan). En "En partida": abre las propiedades de **Webcam** y elige tu cámara (se ajusta sola al marco), y revisa que **Captura de juego** pilla GTA.
+3. Mismas 6 escenas que en Streamlabs. Dispositivos del PC de directo (si cambian, elígelos en sus propiedades):
+   - **Dispositivo de captura de video**: capturadora AVerMedia GC573 a 2560×1440, fondo de "En partida".
+   - **Webcam**: *Camera (NVIDIA Broadcast)*; es la misma fuente en las dos escenas que la usan y se ajusta sola al marco.
+   - **Broadcast**: micrófono de NVIDIA Broadcast, en todas las escenas menos "Alertas (no borrar)".
+   - **Navegador**: overlay de TriggerFyre dentro de "Alertas (no borrar)" (sale en todas las escenas con alertas).
 4. La colección está hecha para un lienzo de **2560×1440**: en **Ajustes → Vídeo** pon la *Resolución base (lienzo)* a 2560x1440 (los HTML se escalan solos; para otro tamaño cambia `W, H` en el script).
-5. Si mueves la carpeta, regenera con `python tools/build_obs_scene_collection.py`.
+5. Si mueves la carpeta, regenera con `python tools/build_obs_scene_collection.py` (las rutas de los HTML son absolutas).
+
+**URL privadas**: la URL de TriggerFyre lleva un token, así que no va en el repositorio. Ponla en `tools/obs_secrets.json` (no se sube a git):
+`{ "triggerfyre_url": "https://overlays.thefyrewire.com/triggerfyre/...?token=..." }`. El script genera entonces también `GTAVI-el_chachocanario-OBS.local.json` (tampoco se sube) con la URL puesta. Sin ese archivo, la fuente **Navegador** queda vacía y hay que pegar la URL en sus propiedades.

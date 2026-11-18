@@ -55,15 +55,16 @@ def browser(name, html, audio=False):
     return s
 
 
-def item(src, item_id, x=0, y=0, box=None):
+def item(src, item_id, x=0, y=0, box=None, scale=1.0, fade=0):
+    """x/y in 1920 px; scale is the OBS item scale (canvas px); fade = show/hide transition in ms."""
     it = {
         "name": src["name"], "source_uuid": src["uuid"], "visible": True, "locked": False,
-        "rot": 0.0, "pos": {"x": x * K, "y": y * K}, "scale": {"x": 1.0, "y": 1.0},
+        "rot": 0.0, "pos": {"x": x * K, "y": y * K}, "scale": {"x": scale, "y": scale},
         "align": 5, "bounds_type": 0, "bounds_align": 0, "bounds": {"x": 0.0, "y": 0.0},
         "crop_left": 0, "crop_top": 0, "crop_right": 0, "crop_bottom": 0,
         "id": item_id, "group_item_backup": False, "scale_filter": "disable",
         "blend_method": "default", "blend_type": "normal",
-        "show_transition": {"duration": 0}, "hide_transition": {"duration": 0}, "private_settings": {},
+        "show_transition": {"duration": fade}, "hide_transition": {"duration": fade}, "private_settings": {},
     }
     if box:  # fit inside a box regardless of the device resolution
         it["bounds_type"] = 2          # OBS_BOUNDS_SCALE_INNER
@@ -77,49 +78,77 @@ def scene(name, members):
     return source(name, "scene", {"id_counter": len(items), "custom_size": False, "items": items})
 
 
+# Private URLs (tokens) live in a gitignored file so the committed collection never carries them:
+#   tools/obs_secrets.json  ->  {"triggerfyre_url": "https://overlays.thefyrewire.com/triggerfyre/...?token=..."}
+# When it exists, a second collection with the real URLs is written to OUT_LOCAL (also gitignored): import that one.
+SECRETS_FILE = ROOT / "tools" / "obs_secrets.json"
+OUT_LOCAL = ROOT / "GTAVI-el_chachocanario-OBS.local.json"
+secrets = json.loads(SECRETS_FILE.read_text(encoding="utf-8")) if SECRETS_FILE.exists() else {}
+
 # ---- sources ----
 alerts_html = browser("Alertas Twitch (overlay)", "alerts.html", audio=True)
-alerts_scene = scene("GTA VI · Alertas (no borrar)", [(alerts_html, {})])
+triggerfyre = source("Navegador", "browser_source", {"url": ""})   # TriggerFyre overlay; URL filled from secrets
+alerts_scene = scene("GTA VI · Alertas (no borrar)", [
+    (alerts_html, {}),
+    (triggerfyre, {"x": 1016 / K, "y": 141 / K, "scale": 0.66, "fade": 300}),
+])
 
-game = source("Captura de juego", "game_capture", {"capture_mode": "any_fullscreen", "capture_cursor": False}, audio=False)
-cam = source("Webcam", "dshow_input", {})   # pick your camera in its properties after import
+# Streaming PC devices (OBS matches them by id; on another PC just pick the device in its properties)
+capture = source("Dispositivo de captura de video", "dshow_input", {       # AVerMedia GC573: the console/game
+    "video_device_id": "AVerMedia HD Capture GC573 1:\\\\?\\pci#22ven_1461&dev_0054&subsys_57301461&rev_00#220000000101000a3500#22{65e8773d-8f56-11d0-a3b9-00a0c9223196}\\{adef4cb5-1401-4177-84ee-fe8b26c13a5b}",
+    "last_video_device_id": "AVerMedia HD Capture GC573 1:\\\\?\\pci#22ven_1461&dev_0054&subsys_57301461&rev_00#220000000101000a3500#22{65e8773d-8f56-11d0-a3b9-00a0c9223196}\\{adef4cb5-1401-4177-84ee-fe8b26c13a5b}",
+    "res_type": 1, "resolution": "2560x1440", "last_resolution": "2560x1440", "video_format": 301,
+}, audio=True)
+cam = source("Webcam", "dshow_input", {
+    "video_device_id": "Camera (NVIDIA Broadcast):", "last_video_device_id": "Camera (NVIDIA Broadcast):",
+})
+mic = source("Broadcast", "wasapi_input_capture", {                         # NVIDIA Broadcast microphone
+    "device_id": "{0.0.1.00000000}.{729d104f-8176-4775-ad6d-f2899c0b6250}",
+}, audio=True)
+MIC = (mic, {"fade": 300})
 
 s_start = scene("GTA VI · Empezamos en breve", [
     (browser("Empezamos en breve (overlay)", "starting-soon.html"), {}),
     (alerts_scene, {}),
+    MIC,
 ])
 s_start_cam = scene("GTA VI · Empezamos en breve (cámara)", [
     (cam, {"x": 1300, "y": 589, "box": (560, 315)}),      # under the page: shows through its transparent hole
     (browser("Empezamos en breve con cámara (overlay)", "starting-soon-cam.html"), {}),
     (alerts_scene, {}),
+    MIC,
 ])
 s_game = scene("GTA VI · En partida", [
-    (game, {"box": (1920, 1080)}),
+    (capture, {"fade": 300}),                              # 2560x1440 = canvas size
     (cam, {"x": 1604, "y": 890, "box": (288, 162)}),      # inside the neon frame of ingame.html
     (browser("Marco en partida (overlay)", "ingame.html"), {}),
     (alerts_scene, {}),
+    MIC,
 ])
 s_brb = scene("GTA VI · Vuelvo enseguida", [
     (browser("Vuelvo enseguida (overlay)", "brb.html"), {}),
     (alerts_scene, {}),
+    MIC,
 ])
 s_end = scene("GTA VI · Fin del directo", [
     (browser("Fin del directo (overlay)", "stream-ending.html"), {}),
+    MIC,
 ])
 
-# ---- transition: "mission passed" stinger (audio only: the cut happens at TRANSITION_POINT_MS while the sound plays on) ----
-TRANSITION = "Misión superada"
-TRANSITION_SOUND = (ROOT / "assets" / "sounds" / "everglades_mission_passed.mp3").resolve()
-TRANSITION_POINT_MS = 300
-assert TRANSITION_SOUND.exists(), TRANSITION_SOUND
+# ---- transition: GTA VI logo stinger (silent, 0.95 s; tools/build_logo_stinger.py renders it) ----
+# A striped panel covers the screen, the logo pops in, OBS cuts at TRANSITION_POINT_MS (panel fully closed)
+# and the panel sweeps out over the new scene. Used for every scene change, including En partida.
+TRANSITION = "Logo GTA VI"
+TRANSITION_VIDEO = (ROOT / "assets" / "transitions" / "gtavi_logo_stinger.webm").resolve()
+TRANSITION_POINT_MS = 400
+assert TRANSITION_VIDEO.exists(), TRANSITION_VIDEO
 transitions = [{
     "name": TRANSITION, "id": "obs_stinger_transition",
     "settings": {
-        "path": TRANSITION_SOUND.as_posix(),
+        "path": TRANSITION_VIDEO.as_posix(),
         "transition_point_type": 0,          # time (ms)
         "transition_point": TRANSITION_POINT_MS,
-        "audio_monitoring": 2,               # monitor and output: heard in the stream and by you
-        "audio_fade_style": 0,               # fade out the old scene's audio, then fade in the new one
+        "audio_fade_style": 1,               # crossfade the scenes' audio (the stinger has none)
         "preload": True, "hw_decode": False,
     },
 }]
@@ -133,8 +162,15 @@ collection = {
     "transitions": transitions, "current_transition": TRANSITION, "transition_duration": 400,
     "quick_transitions": [], "saved_projectors": [], "preview_locked": False,
     "scaling_enabled": False, "scaling_level": 0, "scaling_off_x": 0.0, "scaling_off_y": 0.0,
+    "virtual-camera": {"type2": 3},
     "modules": {}, "version": 2, "canvases": [],
 }
 
 OUT.write_text(json.dumps(collection, indent=4, ensure_ascii=False), encoding="utf-8")
 print(f"OK -> {OUT}")
+if secrets.get("triggerfyre_url"):
+    triggerfyre["settings"]["url"] = secrets["triggerfyre_url"]
+    OUT_LOCAL.write_text(json.dumps(collection, indent=4, ensure_ascii=False), encoding="utf-8")
+    print(f"OK -> {OUT_LOCAL} (with private URLs: import this one, never commit it)")
+else:
+    print(f"(no {SECRETS_FILE.name}: the TriggerFyre source has no URL; paste it in OBS or create the file)")
