@@ -62,6 +62,7 @@
     el.style.borderLeftColor = c;
     el.innerHTML = `${badgeHtml}<span class="name" style="color:${c}">${esc(name)}</span><span class="text">${renderText(text, emotes)}</span>`;
     box.appendChild(el);
+    box.dispatchEvent(new CustomEvent("chat:message", { detail: el }));
     while (box.children.length > CFG.maxMessages) box.firstElementChild.remove();
     if (CFG.hideAfter > 0) setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 700); }, CFG.hideAfter * 1000);
   }

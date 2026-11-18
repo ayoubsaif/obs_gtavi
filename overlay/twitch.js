@@ -1,5 +1,5 @@
 /*
- * Twitch data for the overlay: sub goal, last 5 subs, and live alerts (subs, resubs, gifts, bits).
+ * Twitch data for the overlay: sub goal, last 5 subs, current category, and live alerts (subs, resubs, gifts, bits).
  *
  *  - Without credentials it uses the values in config.js (subs.goal / subs.lastSubs).
  *  - With config.twitch.clientId + token it connects to Twitch EventSub (WebSocket) and
@@ -99,7 +99,7 @@
       const v = await fetch("https://id.twitch.tv/oauth2/validate", { headers: { Authorization: "OAuth " + T.token } });
       if (!v.ok) throw new Error("token no válido o caducado");
       userId = (await v.json()).user_id;
-      await Promise.all([loadGoal(), loadSubs()]);
+      await Promise.all([loadGoal(), loadSubs(), loadGame()]);
       connect("wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=30", true);
     } catch (e) { console.warn("[twitch] modo sin conexión:", e.message); }
   }
@@ -110,6 +110,13 @@
       const sg = (g.data || []).find(x => /sub/.test(x.type));
       if (sg) applyGoal(sg.description, sg.current_amount, sg.target_amount);
     } catch (e) { console.warn("[twitch] goals:", e.message); }
+  }
+  // Current Twitch category ("Jugando a" / starting-soon subtitle); live changes come via channel.update.
+  async function loadGame() {
+    try {
+      const r = await api(`/channels?broadcaster_id=${userId}`);
+      Overlay.setGame((r.data && r.data[0] && r.data[0].game_name) || "");
+    } catch (e) { console.warn("[twitch] categoría:", e.message); }
   }
   // Replace the config.js examples with real subscribers. Helix gives no sub dates, so subs received
   // live (marked `live`) stay first and the rest is filled in Twitch's order, skipping the broadcaster.
@@ -133,7 +140,8 @@
 
   const SUBS = [
     ["channel.subscribe", "1"], ["channel.subscription.message", "1"], ["channel.subscription.gift", "1"],
-    ["channel.cheer", "1"], ["channel.goal.begin", "1"], ["channel.goal.progress", "1"], ["channel.goal.end", "1"]
+    ["channel.cheer", "1"], ["channel.goal.begin", "1"], ["channel.goal.progress", "1"], ["channel.goal.end", "1"],
+    ["channel.update", "2"]   // title/category changes (no scope needed)
   ];
 
   function connect(url, subscribe) {
@@ -177,6 +185,8 @@
         if (/sub/.test(e.type)) applyGoal(e.description, e.current_amount, e.target_amount); break;
       case "channel.goal.end":
         if (/sub/.test(e.type)) applyGoal(e.description, e.current_amount, e.target_amount); break;
+      case "channel.update":
+        Overlay.setGame(e.category_name || ""); break;
     }
   }
 

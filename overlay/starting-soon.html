@@ -31,12 +31,14 @@
   .chat-card .feed .msg { background: rgba(255,255,255,.06); }
   .live-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 12px var(--hot); margin-right: 12px; vertical-align: middle; }
 
-  /* ---------- ?cam=1 (starting-soon-cam.html): webcam replaces the chat card, 560x315 at x=1300, y=589 ----------
-     The page cuts a transparent hole there; the webcam source sits UNDER this browser source. */
+  /* ---------- ?cam=1 (starting-soon-cam.html): webcam replaces the subs card, 560x315 at x=1300, y=589 ----------
+     The page cuts a transparent hole there; the webcam source sits UNDER this browser source.
+     The chat card moves to the top of the column and ends 22px above the cam label (y=565). */
   .cam { display: none; position: absolute; left: 1300px; top: 589px; width: 560px; height: 315px; }
   html.with-cam.has-scene { background: transparent; }
   html.with-cam .scene { clip-path: path(evenodd, "M0 0H1920V1080H0Z M1300 589H1860V904H1300Z"); }
-  html.with-cam .chat-card { display: none; }
+  html.with-cam .side { bottom: 537px; }
+  html.with-cam .subs-card { display: none; }
   html.with-cam .cam { display: block; }
   .cam .frame {
     position: absolute; inset: -6px; border-radius: 12px; padding: 6px;
@@ -82,7 +84,7 @@
   </div>
 
   <div class="side">
-    <div class="support-card rise d3">
+    <div class="support-card subs-card rise d3">
       <div class="lbl">Apoya el directo</div>
       <div class="line" data-support-line></div>
       <div class="note" data-support-note></div>

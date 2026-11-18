@@ -2,9 +2,9 @@
 
 | Escena | Archivo | Notas |
 |---|---|---|
-| En partida | `ingame.html` | Transparente. Marco de webcam abajo a la derecha (288×162 en x=1604, y=890). `?hud=1` muestra la barra Jugando a / hora / en directo, `?news=1` las Noticias de Leonida, `?preview=1` pone un fondo de prueba. |
+| En partida | `ingame.html` | Transparente. Marco de webcam abajo a la derecha (288×162 en x=1604, y=890). Encima, el chat de Twitch: aparece al llegar mensajes (fondo oscuro suave, sin bordes) y se oculta tras `chat.idleHide` segundos sin actividad (25 por defecto, en `config.js`); `?chat=0` lo quita, `?test=1` muestra mensajes de prueba. `?hud=1` muestra la barra Jugando a / hora / en directo, `?news=1` las Noticias de Leonida, `?preview=1` pone un fondo de prueba. |
 | Empezamos en breve | `starting-soon.html` | Fondo **álbum automático** (5 fotos, transiciones: zoom cruzado, barrido neón, persianas, iris, empuje). Cuenta atrás `HH:MM:SS` hasta las `00:00:00` (Europe/Madrid), configurable en `config.js` (`countdownTo`, `countdownZone`) o con `?at=21:30:00`; `?minutes=10` fuerza una duración fija. |
-| Empezamos en breve (cámara) | `starting-soon-cam.html` | La misma pantalla con un hueco transparente para la webcam en lugar del chat (560×315 en x=1300, y=589, marco neón como en partida). Redirige a `starting-soon.html?cam=1`; la webcam va **debajo** de esta fuente. |
+| Empezamos en breve (cámara) | `starting-soon-cam.html` | La misma pantalla con un hueco transparente para la webcam en lugar de la tarjeta de subs (560×315 en x=1300, y=589, marco neón como en partida); el chat ocupa la parte superior de la columna. Redirige a `starting-soon.html?cam=1`; la webcam va **debajo** de esta fuente. |
 | Vuelvo enseguida | `brb.html` | Contador "Ausente". |
 | Fin del directo | `stream-ending.html` | Próximo directo + últimos 5 subs. |
 | Chat | `chat.html` | Transparente. Chat de Twitch de el_chachocanario suelto, para añadirlo a mano donde quieras (no va en ninguna escena; "Empezamos en breve" ya trae el suyo). Solo lectura, sin token. Oculta bots y comandos `!`, respeta los mensajes borrados por moderadores. `?test=1` mensajes de prueba. |
@@ -36,7 +36,7 @@ Sin esto, todo funciona con los datos de ejemplo de `config.js`.
 4. Pega ambos en `config.js` → `twitch: { clientId: "...", token: "..." }`. ⚠️ El token es privado: no compartas `config.js` ni lo subas a internet.
 5. Opcional: crea un **objetivo de subs** en el Panel de creador de Twitch → Objetivos; el overlay usa ese en vez del de `config.js`.
 
-El token caduca al cabo de un tiempo; si las alertas dejan de llegar, repite los pasos 2–4. Con el token puesto, al cargar cada escena los ejemplos de `config.js` se sustituyen por tus **suscriptores reales** (Twitch no da la fecha de cada sub, así que salen en el orden de Twitch; las subs que llegan en directo van siempre primero). Si no tienes suscriptores, la lista se oculta. Los últimos 5 subs se guardan y se comparten entre escenas; `?reset=1` vuelve a los de `config.js`.
+El token caduca al cabo de un tiempo; si las alertas dejan de llegar, repite los pasos 2–4. Con el token puesto, al cargar cada escena los ejemplos de `config.js` se sustituyen por tus **suscriptores reales** (Twitch no da la fecha de cada sub, así que salen en el orden de Twitch; las subs que llegan en directo van siempre primero). Si no tienes suscriptores, la lista se oculta. Los últimos 5 subs se guardan y se comparten entre escenas; `?reset=1` vuelve a los de `config.js`. El juego que aparece en "Jugando a" y en "Empezamos en breve" es la **categoría puesta en Twitch** (se actualiza al momento si la cambias durante el directo); sin token o sin categoría se usa `game` de `config.js`.
 
 ## Panel de alertas en OBS (lanzar alertas a mano)
 `control.html` es un panel con botones (Sub / Nivel 2 / Nivel 3, Resub con meses, Regalo con nº de subs, Bits) que lanza las alertas en `alerts.html`. No necesita token de Twitch.

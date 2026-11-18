@@ -49,6 +49,21 @@
   .event .k { font-size: 16px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: var(--cyan); }
   .event .v { font-family: var(--display); font-size: 30px; letter-spacing: 1px; transition: opacity .4s; }
 
+  /* ---------- Chat above the webcam: only shows while chat is active ----------
+     Same dark ink as the subs card, lighter and without the side border. Grows up from y=856. */
+  .chat-panel {
+    position: absolute; right: 18px; bottom: 224px; width: 316px; max-height: 442px;
+    padding: 10px 12px; background: rgba(18,8,31,.38); border-radius: 6px;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; overflow: hidden;
+    opacity: 0; transform: translateY(12px); transition: opacity .5s ease, transform .5s ease;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+  }
+  .chat-panel.active { opacity: 1; transform: none; }
+  .chat-panel .status { display: none; }
+  .chat-panel .msg { font-size: 19px; padding: 4px 6px 5px; background: none; border-left: 0; }
+  .chat-panel .msg.highlight { background: rgba(255,177,94,.14); }
+
   body.preview { background: url("img/Jason_and_Lucia_03.jpg") center/cover; }
 </style>
 </head>
@@ -60,6 +75,8 @@
   </div>
 
   <div class="event" id="news"><div class="k">Noticias de Leonida</div><div class="v" id="msg"></div></div>
+
+  <div class="chat-panel" data-chat></div>
 
   <div class="cam">
     <div class="frame"></div>
@@ -78,6 +95,20 @@
   if (!showNews) document.getElementById("news").remove();
   if (query.get("preview") === "1") document.body.classList.add("preview");
 
+  // Chat panel: fades in on a new message, fades out (and clears) after chat.idleHide seconds of silence. ?chat=0 hides it.
+  const chatPanel = document.querySelector(".chat-panel");
+  if (query.get("chat") === "0") chatPanel.remove();
+  else {
+    const idle = ((config.chat || {}).idleHide ?? 25) * 1000; let hideT;
+    chatPanel.addEventListener("chat:message", () => {
+      chatPanel.classList.add("active"); clearTimeout(hideT);
+      hideT = setTimeout(() => {
+        chatPanel.classList.remove("active");
+        setTimeout(() => { if (!chatPanel.classList.contains("active")) chatPanel.querySelectorAll(".msg").forEach(m => m.remove()); }, 600);
+      }, idle);
+    });
+  }
+
   const start = Date.now();
   const clock = document.getElementById("clock") || {}, up = document.getElementById("uptime") || {};
   setInterval(() => {
@@ -90,5 +121,6 @@
     el.style.opacity = 0; setTimeout(() => { el.textContent = msgs[i++ % msgs.length]; el.style.opacity = 1; }, 400); }
   rotate(); setInterval(rotate, 9000);
 </script>
+<script src="chat.js"></script>
 </body>
 </html>

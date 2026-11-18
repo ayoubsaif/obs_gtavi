@@ -16,9 +16,20 @@
   const fmt = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60;
     return (h ? h + ":" + pad(m) : pad(m)) + ":" + pad(s % 60); };
 
+  // Game/category: the one set on Twitch (written by twitch.js, shared by every scene through localStorage),
+  // falling back to config.game while offline or with no category set.
+  const GAME_KEY = "gta6-overlay.game.v1";
+  const cachedGame = () => { try { return localStorage.getItem(GAME_KEY) || ""; } catch (e) { return ""; } };
+  const showGame = () => document.querySelectorAll("[data-game]").forEach(el => el.textContent = cachedGame() || C.game || "");
+  function setGame(name) {
+    try { name ? localStorage.setItem(GAME_KEY, name) : localStorage.removeItem(GAME_KEY); } catch (e) {}
+    showGame();   // "storage" only fires in the OTHER pages
+  }
+  addEventListener("storage", e => { if (e.key === GAME_KEY) showGame(); });
+
   function fill() {
     document.querySelectorAll("[data-channel]").forEach(el => el.textContent = q.get("channel") || C.channel || "");
-    document.querySelectorAll("[data-game]").forEach(el => el.textContent = C.game || "");
+    showGame();
     document.querySelectorAll("[data-next]").forEach(el => el.textContent = C.nextStream || "");
 
     const bar = document.querySelector(".socials");
@@ -49,6 +60,6 @@
   }
   fit(); addEventListener("resize", fit); document.addEventListener("DOMContentLoaded", fit);
 
-  window.Overlay = { config: C, query: q, fmt, pad, ICONS };
+  window.Overlay = { config: C, query: q, fmt, pad, ICONS, setGame };
   document.addEventListener("DOMContentLoaded", fill);
 })();
