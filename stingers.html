@@ -6,14 +6,13 @@
 <title>Transiciones</title>
 <!--
   Genera las transiciones animadas de OBS (stingers): los mismos efectos que el álbum de
-  «Empezamos en breve» (fx.js), con la tarjeta «Misión superada» y el sonido mezclado.
+  «Empezamos en breve» (fx.js), con un degradado neón y el sonido mezclado.
   Ábrelo con doble clic en Chrome o Edge. Guarda los vídeos en assets/stingers/<efecto>.webm
   (vídeo WebM con transparencia + audio). Luego, en install.html, activa «Transiciones animadas».
 -->
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/ui.css">
 <style>
-  @font-face { font-family: "GTA Art Deco"; src: url("assets/fonts/GTA%20Art%20Deco%20-%20Medium.ttf") format("truetype"); font-weight: 500 900; }
   .stage { position: relative; margin-top: 14px; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9;
            background: repeating-conic-gradient(#3a3046 0 25%, #2a2234 0 50%) 0 0 / 32px 32px; }   /* checkerboard = transparent */
   .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -38,7 +37,7 @@
 <main>
   <section id="preview" data-title="Vista previa">
     <h2>Vista previa</h2>
-    <p class="intro">Los mismos efectos que el álbum de «Empezamos en breve». El efecto tapa la pantalla con la tarjeta «Misión superada», OBS cambia de escena por detrás y el efecto se deshace mostrando la escena nueva. El cuadriculado es lo transparente.</p>
+    <p class="intro">Los mismos efectos que el álbum de «Empezamos en breve». El efecto tapa la pantalla con un degradado neón, OBS cambia de escena por detrás y el efecto se deshace mostrando la escena nueva. El cuadriculado es lo transparente.</p>
     <div class="stage"><canvas id="cv" width="1920" height="1080"></canvas></div>
   </section>
 
@@ -91,8 +90,8 @@
   const EFFECTS = Object.keys(S.names);
   const VISUAL = S.inMs + S.holdMs + S.outMs;
 
-  // ---------- the "Misión superada" card (pause-menu look) ----------
-  function cover(life, scale = 1, offX = 0) {
+  // ---------- the cover card: plain neon gradient ----------
+  function cover(scale = 1, offX = 0) {
     ctx.save();
     ctx.translate(W / 2 + offX, H / 2); ctx.scale(scale, scale); ctx.translate(-W / 2, -H / 2);
     const g = ctx.createLinearGradient(0, 0, W * .6, H);
@@ -100,27 +99,15 @@
     ctx.fillStyle = g; ctx.fillRect(-W * .2, -H * .2, W * 1.4, H * 1.4);
     const v = ctx.createLinearGradient(0, H * .55, 0, H); v.addColorStop(0, "rgba(23,18,29,0)"); v.addColorStop(1, "rgba(23,18,29,.55)");
     ctx.fillStyle = v; ctx.fillRect(-W * .2, 0, W * 1.4, H * 1.2);
-    // title, slowly growing while it holds
-    const k = 1 + .03 * Math.min(1, life / VISUAL);
-    ctx.translate(W / 2, H / 2); ctx.scale(k, k);
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    const tg = ctx.createLinearGradient(0, -110, 0, 110);
-    tg.addColorStop(0, "#ffb15e"); tg.addColorStop(.5, "#ff4fa3"); tg.addColorStop(1, "#9b7bff");
-    ctx.font = '500 150px "GTA Art Deco", "Barlow Condensed", Impact, sans-serif';
-    ctx.shadowColor = "rgba(255,79,163,.6)"; ctx.shadowBlur = 50; ctx.fillStyle = tg;
-    ctx.fillText("MISIÓN", 0, -78); ctx.fillText("SUPERADA", 0, 70);
-    ctx.shadowBlur = 0;
-    const bar = ctx.createLinearGradient(-260, 0, 260, 0); bar.addColorStop(0, "rgba(255,255,255,.9)"); bar.addColorStop(1, "#ff4fa3");
-    ctx.fillStyle = bar; ctx.fillRect(-260, 168, 520, 3);
     ctx.restore();
   }
 
   // one stinger frame at time ms: effect in (transparent -> card), hold, effect back out (card -> transparent)
   function frame(fx, ms) {
     ctx.clearRect(0, 0, W, H);
-    const none = () => {}, card = (sc, off) => cover(ms, sc, off);
+    const none = () => {}, card = cover;
     if (ms < S.inMs) Fx.draw(ctx, fx, Fx.ease(ms / S.inMs), none, card, W, H);
-    else if (ms < S.inMs + S.holdMs) cover(ms);
+    else if (ms < S.inMs + S.holdMs) cover();
     else if (ms < VISUAL) Fx.draw(ctx, fx, Fx.ease(1 - (ms - S.inMs - S.holdMs) / S.outMs), none, card, W, H);
   }
 
@@ -300,7 +287,7 @@
   addEventListener("scroll", spy, { passive: true }); spy();
 
   // init
-  (document.fonts ? document.fonts.load('500 150px "GTA Art Deco"') : Promise.resolve()).catch(() => {}).then(() => frame(EFFECTS[0], S.inMs + 1));
+  frame(EFFECTS[0], S.inMs + 1);
   loadDefaultSound().then(b => { soundBuf = soundBuf || b; updateEta(); setState(b ? `Sonido: Misión superada (${b.duration.toFixed(1)} s)` : "Sin sonido por defecto: elige uno", b ? "" : "dirty"); })
     .catch(() => setState("No se pudo decodificar el sonido por defecto", "err"));
   updateEta();
