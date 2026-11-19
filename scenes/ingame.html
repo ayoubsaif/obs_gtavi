@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Overlay en partida</title>
 <link rel="stylesheet" href="../css/common.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yellowtail&display=swap">
 <style>
   /* Transparent for OBS — everything outside the cards shows gameplay */
   html, body { background: transparent; }
@@ -14,9 +15,11 @@
   /* compact label: channel name only (no live dot / uptime) */
   .cam .label { height: 40px; }
   .cam .label .txt { padding: 0 14px; }
-  /* GTA VI logo centered under the cam */
-  .cam .logo { position: absolute; left: 50%; top: calc(100% + 14px); height: 90px; transform: translateX(-50%);
-               filter: drop-shadow(0 6px 16px rgba(0,0,0,.4)); }
+  .cam .label .sq { width: 40px; }
+  .cam .label .sq i { width: 12px; height: 12px; }
+  /* neon "Vice City" script on the cam's bottom-right corner (from the first overlay version) */
+  .cam .script { position: absolute; right: 12px; bottom: 6px; white-space: nowrap; font-family: "Yellowtail", "Brush Script MT", cursive;
+                 font-size: 30px; color: var(--cyan); text-shadow: 0 0 12px rgba(63,242,255,.8), 0 2px 0 var(--ink); transform: rotate(-4deg); }
 
   /* ---------- Chat above the cam label: phone message bubbles, only while chat is active ---------- */
   .chat-panel {
@@ -66,8 +69,8 @@
 
   <div class="cam">
     <div class="frame"></div>
-    <div class="label"><div class="txt"><b data-channel></b></div></div>
-    <img class="logo" src="../assets/GTAVI_logo.png" alt="Grand Theft Auto VI">
+    <div class="label"><div class="txt"><b data-channel></b></div><div class="sq"><i></i></div></div>
+    <div class="script">Vice City</div>
   </div>
 
 <script src="../js/demo-data.js"></script>
