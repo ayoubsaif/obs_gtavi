@@ -131,8 +131,10 @@ canvas.album { position: absolute; left: 0; top: 0; width: 1920px; height: 1080p
 .cam .label .txt { flex: 1; padding: 9px 14px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .cam .label b { font: 700 22px/1.15 var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cam .label span { font: 500 17px/1.2 var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
-.cam .label .sq { width: 66px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--pink); }
-.cam .label .sq i { width: 16px; height: 16px; border-radius: 50%; background: var(--white); animation: pulse 1.6s ease-in-out infinite; }
+/* live dot: bare pulsing pink dot on the right of the label (no background square) */
+.cam .label .sq { width: 66px; flex: none; display: flex; align-items: center; justify-content: center; }
+.cam .label .sq i { width: 16px; height: 16px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 10px var(--hot);
+                    animation: pulse 1.6s ease-in-out infinite; }
 
 /* ---------- Phone notification card (alerts, news) ---------- */
 .notif { display: flex; align-items: center; gap: 18px; padding: 16px 22px 16px 16px; border-radius: 18px;
