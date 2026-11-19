@@ -56,6 +56,8 @@
   <label class="check"><input type="checkbox" id="record">
     <span>Contar en últimos subs y objetivo<small>Sin marcar: solo se ve la alerta (para probar). Si hay un objetivo de Twitch activo, el objetivo no cambia.</small></span>
   </label>
+  <div class="row" style="margin-top:8px"><button id="reset" class="grow" disabled>Borrar subs de prueba</button></div>
+  <p class="hint">Vuelve los últimos subs y el objetivo a los de config.js (o a los reales de Twitch si está conectado). Necesita la escena de alertas cargada en OBS.</p>
 </section>
 
 <div class="log" id="log" role="status"></div>
@@ -101,7 +103,7 @@
     ready = on;
     $("status").classList.toggle("on", on);
     $("statusText").textContent = text;
-    document.querySelectorAll("button[data-kind]").forEach(b => b.disabled = !on);
+    document.querySelectorAll("button[data-kind], #reset").forEach(b => b.disabled = !on);
   }
   function log(text, err) { $("log").textContent = text; $("log").classList.toggle("err", !!err); }
 
@@ -176,6 +178,17 @@
   }
 
   document.querySelectorAll("button[data-kind]").forEach(b => b.addEventListener("click", () => fire(b)));
+  $("reset").addEventListener("click", async () => {
+    if (!ready) return;
+    $("reset").disabled = true;
+    const st = await request("CallVendorRequest", {
+      vendorName: "obs-browser", requestType: "emit_event",
+      requestData: { event_name: "gta6-alert", event_data: { kind: "reset", id: Date.now() } }
+    });
+    $("reset").disabled = !ready;
+    if (st && st.result) log("✓ Subs de prueba borrados");
+    else log("✗ " + ((st && st.comment) || "Error al enviar"), true);
+  });
   $("save").addEventListener("click", () => {
     conn = { host: $("host").value.trim() || "localhost", port: clampInt($("port").value, 1, 65535, 4455), password: $("password").value };
     try { localStorage.setItem(PREFS, JSON.stringify(conn)); } catch (e) {}

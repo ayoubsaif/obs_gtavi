@@ -205,6 +205,13 @@
   // the other scenes get the new list/goal through localStorage, so a sub is counted once.
   addEventListener("gta6-alert", ev => {
     const d = ev.detail || {};
+    // "Borrar subs de prueba": back to config.js/demo-data.js (like ?reset=1), then re-read the real data from Twitch
+    if (d.kind === "reset") {
+      if (!handlers.alert.length) return;   // alerts.html does it once; other scenes follow through localStorage
+      state.goal = S.goal ? { ...S.goal } : null; state.lastSubs = EXAMPLES(); liveGoal = false; changed();
+      if (userId) { loadGoal(); loadSubs(); }
+      return;
+    }
     if (!/^(sub|resub|gift|cheer)$/.test(d.kind)) return;
     const a = { kind: d.kind, name: String(d.name || "Anónimo").slice(0, 40), tier: d.tier || "1000",
                 months: +d.months || 1, count: +d.count || 1, bits: +d.bits || 0,
