@@ -59,7 +59,7 @@
     const badgeHtml = badges.split(",").map(b => b.split("/")[0]).filter(b => BADGES[b])
       .map(b => `<img class="badge" alt="" src="${BADGES[b]}">`).join("");
     const c = readable(color) || fallbackColor(name);
-    el.style.borderLeftColor = c;
+    el.style.setProperty("--c", c);
     el.innerHTML = `${badgeHtml}<span class="name" style="color:${c}">${esc(name)}</span><span class="text">${renderText(text, emotes)}</span>`;
     box.appendChild(el);
     box.dispatchEvent(new CustomEvent("chat:message", { detail: el }));
@@ -110,13 +110,7 @@
   }
 
   if (query.get("test") === "1") {
-    const demo = [
-      { name: "Lucia_Fan", color: "#FF69B4", badges: "subscriber/6", text: "¡Por fin GTA VI en el canal! 🌴" },
-      { name: "ViceCityVIP", color: "#1E90FF", badges: "vip/1", text: "Kappa ese coche no llega a la huida", emotes: "25:0-4" },
-      { name: "el_chachocanario", color: "#9146FF", badges: "broadcaster/1", text: "Bienvenidos a Leonida, gente" },
-      { name: "PalmeraNeon", color: "#000080", text: "qué ganas de ver Vice City de noche" },
-      { name: "ModCanario", color: "#00FF7F", badges: "moderator/1", text: "Recordad: buen rollo en el chat" }
-    ];
-    let i = 0; const tick = () => add(demo[i++ % demo.length]); tick(); setInterval(tick, 1800);
+    const demo = Overlay.demo.chat || [];   // demo-data.js
+    let i = 0; const tick = () => add(demo[i++ % demo.length]); if (demo.length) { tick(); setInterval(tick, 1800); }
   } else connect();
 })();

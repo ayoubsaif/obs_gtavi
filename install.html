@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instalar en OBS</title>
+<!--
+  Genera la colección de escenas de OBS Studio (.json) y Streamlabs Desktop (.overlay)
+  con las rutas de la carpeta donde está el overlay. Ábrelo con doble clic (Chrome o Edge)
+  desde la carpeta del overlay: detecta la ruta sola. El diseño de las escenas está en collection.js.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+  .canvas-custom { display: none; } .canvas-custom.on { display: flex; }
+  .canvas-custom input { width: 110px; flex: none; }
+  #fallback { display: none; } #fallback.on { display: block; }
+  .path { font: 12.5px Consolas, monospace; color: #ffd0e6; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Instalar en OBS</h1>
+    <span id="state"></span>
+    <a class="crosslink" href="settings.html">← Ajustes</a>
+    <div class="actions">
+      <button id="btnSl" title="Colección para Streamlabs Desktop">Descargar Streamlabs (.overlay)</button>
+      <button id="btnObs" class="primary" title="Colección para OBS Studio">Descargar OBS (.json)</button>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <section id="carpeta" data-title="Carpeta">
+    <h2>Carpeta del overlay</h2>
+    <p class="intro">Las fuentes de navegador de OBS apuntan a los HTML por ruta absoluta. Pon aquí la carpeta del overlay (la que tiene los HTML y <code>assets</code>) tal y como está en el PC donde emites.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="root">Carpeta del overlay</label>
+        <div class="inline">
+          <input type="text" id="root" spellcheck="false" autocomplete="off" placeholder="D:/obs/gtavi">
+          <button type="button" id="btnDetect" title="Volver a la carpeta desde la que has abierto esta página">Usar la detectada</button>
+        </div>
+        <small id="rootHint">Detectada a partir de dónde está esta página. Puedes pegar una ruta de Windows (con \).</small>
+      </div>
+      <div class="field">
+        <label for="assets">Carpeta assets</label>
+        <input type="text" id="assets" readonly tabindex="-1">
+        <small>Dentro de la carpeta del overlay. De aquí sale el sonido de la transición «Misión superada» (<code>assets/sounds/everglades_mission_passed.mp3</code>).</small>
+      </div>
+      <div class="field">
+        <label>Comprobación</label>
+        <div><span class="pill" id="check">Sin comprobar</span></div>
+        <small>Si la ruta es la de otro PC es normal que no se pueda comprobar aquí: puedes descargar igualmente.</small>
+      </div>
+    </div>
+  </section>
+
+  <section id="lienzo" data-title="Lienzo">
+    <h2>Lienzo de OBS</h2>
+    <p class="intro">Tamaño de la <b>Resolución base (lienzo)</b> en OBS → Ajustes → Vídeo. Las páginas se escalan solas; la colección coloca la webcam y la captura para ese tamaño. (Streamlabs se ajusta solo.)</p>
+    <div class="grid">
+      <div class="field">
+        <label for="canvas">Resolución base</label>
+        <select id="canvas">
+          <option value="2560x1440">2560 × 1440 (1440p)</option>
+          <option value="1920x1080">1920 × 1080 (1080p)</option>
+          <option value="custom">Personalizada…</option>
+        </select>
+      </div>
+      <div class="field canvas-custom" id="customRow">
+        <label>Tamaño</label>
+        <div class="inline">
+          <input type="number" id="cw" min="320" step="1" aria-label="Ancho"> × <input type="number" id="ch" min="180" step="1" aria-label="Alto">
+        </div>
+        <small>Mejor en proporción 16:9.</small>
+      </div>
+      <div class="field">
+        <label for="stingers">Transiciones animadas</label>
+        <div class="inline"><label class="check"><input type="checkbox" id="stingers"></label><span class="pill" id="stCheck">Sin comprobar</span></div>
+        <small>Los efectos del álbum (zoom, barrido neón, persianas, iris, empuje) con «Misión superada», uno por escena. Primero genéralos en <a href="stingers.html">Transiciones</a>. Desactivado: solo el sonido de «Misión superada».</small>
+      </div>
+    </div>
+  </section>
+
+  <section id="partida" data-title="En partida">
+    <h2>Escena «En partida»</h2>
+    <p class="intro">Qué va de fondo, debajo del marco y la webcam.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="capture">Captura</label>
+        <select id="capture">
+          <option value="game">Captura de juego (el juego corre en este PC)</option>
+          <option value="video">Dispositivo de captura de vídeo (capturadora o cámara)</option>
+        </select>
+        <small id="captureHint"></small>
+      </div>
+    </div>
+  </section>
+
+  <section id="puntos" data-title="Alertas de puntos">
+    <h2>Alertas de puntos del canal</h2>
+    <p class="intro">Enlace de un overlay externo para los canjes de puntos (p. ej. TriggerFyre). Se añade como fuente de navegador dentro de «GTA VI · Alertas (no borrar)», así sale en todas las escenas que tienen alertas, con su sonido en el directo.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="pointsUrl">Enlace del overlay</label>
+        <div class="inline">
+          <input type="password" id="pointsUrl" spellcheck="false" autocomplete="off" placeholder="https://overlays.thefyrewire.com/triggerfyre/…?token=…">
+          <button type="button" id="btnShowPts">Ver</button>
+        </div>
+        <small>⚠️ Lleva tu token: se guarda solo en este navegador y va dentro de los archivos descargados. No los compartas. Vacío = sin esta fuente.</small>
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <div><span class="pill" id="ptsCheck">Sin enlace</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="obs" data-title="OBS Studio">
+    <h2>OBS Studio</h2>
+    <ol class="steps">
+      <li><span>Pulsa <b>Descargar OBS (.json)</b> arriba. Se guarda <code data-v="obsFile"></code>.</span></li>
+      <li><span>En OBS: <b>Colección de escenas → Importar</b> → botón <b>…</b> → elige el archivo descargado → marca la casilla → <b>Importar</b>.</span></li>
+      <li><span>Actívala en <b>Colección de escenas → GTA VI · el_chachocanario</b>.</span></li>
+      <li><span>En <b>Ajustes → Vídeo</b> pon la <i>Resolución base (lienzo)</i> a <b data-v="canvas"></b>.</span></li>
+      <li><span>Transición: <b data-v="trans"></b>.</span></li>
+      <li><span>En «En partida» abre las propiedades de <b>Webcam</b> y elige tu cámara (se ajusta sola al marco). <span data-v="captureStep"></span></span></li>
+      <li><span>Las fuentes cargan desde:</span><span class="path" data-v="root"></span></li>
+    </ol>
+  </section>
+
+  <section id="streamlabs" data-title="Streamlabs">
+    <h2>Streamlabs Desktop</h2>
+    <ol class="steps">
+      <li><span>Pulsa <b>Descargar Streamlabs (.overlay)</b>. Se guarda <code data-v="slFile"></code>.</span></li>
+      <li><span>En Streamlabs: <b>Ajustes → Colecciones de escenas → Importar archivo de overlay</b> y elige el archivo descargado.</span></li>
+      <li><span>Se crea una colección con 6 escenas; «Alertas (no borrar)» va dentro de las demás.</span></li>
+      <li><span>En «En partida» elige tu cámara en <b>Webcam</b>. <span data-v="captureStep"></span></span></li>
+    </ol>
+  </section>
+
+  <section id="dock" data-title="Panel de alertas">
+    <h2>Panel de alertas (dock)</h2>
+    <p class="intro"><code>control.html</code> lanza alertas a mano desde un dock de OBS, a través del servidor WebSocket.</p>
+    <ol class="steps">
+      <li><span>OBS → <b>Herramientas → Ajustes del servidor WebSocket</b> → marca <b>Activar servidor WebSocket</b>. En <b>Mostrar información de conexión</b> copia la contraseña.</span></li>
+      <li><span>OBS → <b>Docks → Docks de navegador personalizados</b>. Nombre: <code>Alertas</code>, URL:</span>
+        <div class="copy"><input type="text" id="dockUrl" readonly><button type="button" data-copy="dockUrl">Copiar</button></div></li>
+      <li><span>En el panel abre <b>Conexión con OBS</b>, pega la contraseña y pulsa <b>Guardar y conectar</b> (o ponla en <a href="settings.html#obs">Ajustes → OBS WebSocket</a>).</span></li>
+    </ol>
+  </section>
+
+  <section id="fallback">
+    <h2>Copiar a mano</h2>
+    <p class="intro">El navegador no ha dejado descargar el archivo. Copia este texto, pégalo en un archivo nuevo llamado <code data-v="obsFile"></code> e impórtalo en OBS.</p>
+    <textarea id="fallbackText" readonly spellcheck="false"></textarea>
+    <div class="actions" style="margin:10px 0 0"><button type="button" data-copy="fallbackText">Copiar</button></div>
+  </section>
+</main>
+
+<script src="js/collection.js"></script>
+<script>
+(function () {
+  const C = window.OVERLAY_COLLECTION;
+  const $ = id => document.getElementById(id);
+  const KEY = "gta6-overlay.install.v1";
+  const setState = (t, cls = "") => { $("state").textContent = t; $("state").className = cls; };
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {} };
+  const prefs = load();
+
+  // ---------- paths ----------
+  function detectRoot() {
+    if (location.protocol !== "file:") return "";
+    let p = decodeURIComponent(location.pathname).replace(/\/[^/]*$/, "");
+    if (location.host) return "//" + location.host + p;          // UNC: file://server/share/...
+    return p.replace(/^\/(?=[A-Za-z]:)/, "");                    // "/D:/x" -> "D:/x"
+  }
+  function normalize(v) {
+    v = String(v || "").trim().replace(/^["']|["']$/g, "");
+    if (/^file:/i.test(v)) { try { v = decodeURIComponent(v.replace(/^file:\/\/\/?/i, "")); } catch (e) {} if (/^[^/]+\/[^/]/.test(v) && !/^[A-Za-z]:/.test(v)) v = "//" + v; }
+    v = v.replace(/\\/g, "/");
+    const unc = v.startsWith("//");
+    v = v.replace(/\/{2,}/g, "/").replace(/\/+$/, "");
+    if (unc) v = "/" + v;
+    if (/^[A-Za-z]:$/.test(v)) v += "/";                          // keep "C:/" usable
+    return v;
+  }
+  const assetsOf = root => root.replace(/\/+$/, "") + "/assets";   // assets/ sits next to the pages
+  function fileUrl(p) {
+    const enc = p.split("/").map(s => encodeURIComponent(s)).join("/").replace(/%3A/gi, ":");
+    return p.startsWith("//") ? "file:" + enc : "file:///" + enc;
+  }
+
+  const detected = detectRoot();
+  const root = () => normalize($("root").value);
+  const canvas = () => {
+    const v = $("canvas").value;
+    if (v !== "custom") { const [w, h] = v.split("x").map(Number); return { w, h }; }
+    return { w: Math.max(320, Math.round(+$("cw").value || 1920)), h: Math.max(180, Math.round(+$("ch").value || 1080)) };
+  };
+
+  // ---------- best-effort folder check (script / audio probes; file:// can't fetch) ----------
+  let probeT, probeN = 0;
+  function probe(src, kind) {
+    return new Promise(res => {
+      let done = false; const end = r => { if (!done) { done = true; clearTimeout(t); res(r); } };
+      const t = setTimeout(() => end("timeout"), 3000);
+      if (kind === "script") {
+        const s = document.createElement("script");
+        s.onload = () => { s.remove(); end("ok"); }; s.onerror = () => { s.remove(); end("missing"); };
+        s.src = src + "?probe=" + Date.now(); document.head.appendChild(s);
+      } else {
+        const a = new Audio(); a.preload = "metadata";
+        a.onloadedmetadata = () => end("ok"); a.onerror = () => end("missing"); a.src = src;
+      }
+    });
+  }
+  // are the animated stingers there? (assets/stingers/<effect>.webm, made by stingers.html)
+  function probeVideo(src) {
+    return new Promise(res => { const v = document.createElement("video"); v.preload = "metadata"; v.muted = true;
+      const t = setTimeout(() => res("timeout"), 3000);
+      v.onloadedmetadata = () => { clearTimeout(t); res("ok"); }; v.onerror = () => { clearTimeout(t); res("missing"); }; v.src = src; });
+  }
+  async function checkStingers(r) {
+    const fxs = Object.keys(C.STINGER.names);
+    const got = await Promise.all(fxs.map(fx => probeVideo(fileUrl(`${assetsOf(r)}/${C.STINGER.dir}/${fx}.webm`))));
+    const ok = got.filter(x => x === "ok").length, el = $("stCheck");
+    if (ok === fxs.length) { el.textContent = "✔ Vídeos encontrados"; el.className = "pill ok"; if (prefs.stingers === undefined) { $("stingers").checked = true; changed(); } }
+    else if (got.includes("missing")) { el.textContent = ok ? `⚠ Faltan ${fxs.length - ok} de ${fxs.length} vídeos` : "Sin generar"; el.className = "pill " + (ok ? "warn" : ""); }
+    else { el.textContent = "No se pudo comprobar"; el.className = "pill"; }
+  }
+  function pill(text, cls) { $("check").textContent = text; $("check").className = "pill " + cls; }
+  function scheduleCheck() {
+    clearTimeout(probeT);
+    const r = root();
+    if (!r) return pill("Pon la carpeta del overlay", "err");
+    pill("Comprobando…", "");
+    probeT = setTimeout(async () => {
+      const n = ++probeN;
+      const [page, sound] = await Promise.all([
+        probe(fileUrl(r + "/js/config.defaults.js"), "script"),
+        probe(fileUrl(assetsOf(r) + "/" + C.TRANSITION_SOUND), "audio")]);
+      if (n !== probeN) return;
+      checkStingers(r);
+      if (page === "ok" && sound === "ok") pill("✔ Carpeta del overlay encontrada", "ok");
+      else if (page === "missing") pill("⚠ No están los archivos del overlay en esa carpeta: las escenas importadas saldrán en blanco", "warn");
+      else if (page === "ok" && sound === "missing") pill("⚠ Overlay encontrado, pero falta el sonido de la transición (assets/sounds)", "warn");
+      else if (page === "ok") pill("✔ Carpeta del overlay encontrada (no se pudo comprobar el sonido)", "ok");
+      else pill("No se pudo comprobar (normal si es la ruta de otro PC)", "");
+    }, 400);
+  }
+
+  // ---------- channel-points link ----------
+  function pointsUrl() {
+    const v = $("pointsUrl").value.trim(); if (!v) return { url: "", ok: true };
+    try { const u = new URL(v); return { url: v, ok: /^https?:$/.test(u.protocol), host: u.host }; } catch (e) { return { url: v, ok: false }; }
+  }
+  function checkPoints() {
+    const p = pointsUrl(), el = $("ptsCheck");
+    if (!p.url) { el.textContent = "Sin enlace: no se añade"; el.className = "pill"; }
+    else if (!p.ok) { el.textContent = "⚠ No es un enlace http(s) válido"; el.className = "pill err"; }
+    else { el.textContent = `✔ Se añadirá: ${p.host}/… (token oculto)`; el.className = "pill ok"; }
+    return p;
+  }
+  const captureSteps = {
+    game: "Revisa que <b>Captura de juego</b> pilla el juego.",
+    video: "Abre <b>Capturadora de vídeo</b> y elige tu capturadora o cámara (y su audio, si lo trae).",
+  };
+
+  // ---------- reflect paths everywhere ----------
+  function refresh() {
+    const r = root(), { w, h } = canvas();
+    $("assets").value = r ? assetsOf(r) : "";
+    $("dockUrl").value = r ? fileUrl(r + "/control.html") : "";
+    const vals = { root: r ? r + "/" : "(sin carpeta)", obsFile: C.OBS_FILE, slFile: C.STREAMLABS_FILE, canvas: `${w}x${h}`,
+      trans: $("stingers").checked ? "cada escena tiene su efecto animado (Misión superada · Barrido neón por defecto)" : "«Misión superada» (solo sonido)" };
+    document.querySelectorAll("[data-v]").forEach(e => { if (e.dataset.v === "captureStep") e.innerHTML = captureSteps[$("capture").value]; else e.textContent = vals[e.dataset.v] ?? ""; });
+    $("captureHint").textContent = $("capture").value === "video"
+      ? "Para una capturadora (PS5, Xbox, otro PC) o una cámara a pantalla completa. Su audio va por la propia fuente."
+      : "Para jugar en este mismo PC.";
+    checkPoints();
+    $("customRow").classList.toggle("on", $("canvas").value === "custom");
+  }
+  function changed() {
+    prefs.root = $("root").value.trim() && root() !== detected ? root() : undefined;
+    prefs.canvas = $("canvas").value; prefs.cw = $("cw").value; prefs.ch = $("ch").value; prefs.stingers = $("stingers").checked;
+    prefs.capture = $("capture").value; prefs.pointsUrl = $("pointsUrl").value.trim() || undefined;
+    save(); refresh();
+  }
+
+  // ---------- downloads ----------
+  function download(name, data, type) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+  function need() {
+    const r = root();
+    if (!r) { setState("Pon primero la carpeta del overlay", "err"); $("root").focus(); return null; }
+    if (!checkPoints().ok) { setState("Revisa el enlace de las alertas de puntos", "err"); $("puntos").scrollIntoView({ behavior: "smooth" }); return null; }
+    return r;
+  }
+  const extras = () => ({ capture: $("capture").value, pointsUrl: pointsUrl().url });
+  $("btnObs").onclick = () => {
+    const r = need(); if (!r) return;
+    const { w, h } = canvas();
+    const json = JSON.stringify(C.buildObs({ root: r, assetsRoot: assetsOf(r), width: w, height: h, stingers: $("stingers").checked, ...extras() }), null, 4);
+    try { download(C.OBS_FILE, json, "application/json"); setState(`Descargado ${C.OBS_FILE} (${w}x${h}) · impórtalo en OBS`, "ok"); }
+    catch (e) {
+      console.warn(e); $("fallbackText").value = json; $("fallback").classList.add("on");
+      $("fallback").scrollIntoView({ behavior: "smooth" }); setState("No se pudo descargar: cópialo a mano (abajo)", "err");
+    }
+  };
+  $("btnSl").onclick = () => {
+    const r = need(); if (!r) return;
+    try { download(C.STREAMLABS_FILE, C.toOverlayZip(C.buildStreamlabs({ root: r, ...extras() })), "application/zip"); setState(`Descargado ${C.STREAMLABS_FILE} · impórtalo en Streamlabs`, "ok"); }
+    catch (e) { console.warn(e); setState("No se pudo descargar el .overlay en este navegador (prueba con Chrome o Edge)", "err"); }
+  };
+
+  // ---------- copy buttons ----------
+  document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", async () => {
+    const inp = $(b.dataset.copy), txt = inp.value; if (!txt) return;
+    let ok = false;
+    try { await navigator.clipboard.writeText(txt); ok = true; }
+    catch (e) { inp.select(); try { ok = document.execCommand("copy"); } catch (e2) {} }
+    const old = b.textContent; b.textContent = ok ? "Copiado ✔" : "Selecciónalo y Ctrl+C"; b.classList.toggle("done", ok);
+    setTimeout(() => { b.textContent = old; b.classList.remove("done"); }, 1600);
+  }));
+
+  // ---------- init ----------
+  $("root").value = prefs.root || detected;
+  if (!detected) $("rootHint").textContent = "No se ha abierto desde el disco: escribe la carpeta donde está el overlay en el PC donde emites (p. ej. D:/obs/gtavi).";
+  $("btnDetect").disabled = !detected;
+  $("btnDetect").onclick = () => { $("root").value = detected; changed(); scheduleCheck(); };
+  if (prefs.canvas) $("canvas").value = prefs.canvas;
+  $("cw").value = prefs.cw || 1920; $("ch").value = prefs.ch || 1080;
+  $("root").addEventListener("input", () => { changed(); scheduleCheck(); });
+  $("root").addEventListener("change", () => { const n = root(); if (n && n !== $("root").value) $("root").value = n; });
+  ["canvas", "cw", "ch"].forEach(id => $(id).addEventListener("input", changed));
+  $("stingers").checked = !!prefs.stingers; $("stingers").addEventListener("change", changed);
+  $("capture").value = prefs.capture === "video" ? "video" : "game"; $("capture").addEventListener("change", changed);
+  $("pointsUrl").value = prefs.pointsUrl || ""; $("pointsUrl").addEventListener("input", changed);
+  $("btnShowPts").onclick = e => { const i = $("pointsUrl"); i.type = i.type === "password" ? "text" : "password"; e.target.textContent = i.type === "password" ? "Ver" : "Ocultar"; };
+  refresh(); scheduleCheck();
+  setState(prefs.root ? "Usando la carpeta que guardaste" : detected ? "Carpeta detectada" : "");
+
+  // nav tabs + scroll spy (as in settings.html)
+  const secs = [...document.querySelectorAll("section[data-title]")];
+  $("nav").replaceChildren(...secs.map(s => Object.assign(document.createElement("a"), { href: "#" + s.id, textContent: s.dataset.title })));
+  const tabs = [...$("nav").querySelectorAll("a")];
+  const spy = () => { let cur = tabs[0];
+    for (const t of tabs) { const s = document.querySelector(t.getAttribute("href")); if (s && s.getBoundingClientRect().top < 160) cur = t; }
+    tabs.forEach(t => t.classList.toggle("on", t === cur)); };
+  addEventListener("scroll", spy, { passive: true }); spy();
+})();
+</script>
+</body>
+</html>

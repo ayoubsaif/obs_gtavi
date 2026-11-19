@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Overlay en partida</title>
+<link rel="stylesheet" href="../css/common.css">
+<style>
+  /* Transparent for OBS — everything outside the cards shows gameplay */
+  html, body { background: transparent; }
+
+  /* ---------- Webcam: left column, minimap-style card, 336x189 at x=32, y=600 ----------
+     Sits above where GTA VI draws its minimap (bottom-left), with a nav-card label on top. */
+  .cam { left: 32px; top: 600px; width: 336px; height: 189px; }
+
+  /* ---------- Chat above the cam label: phone message bubbles, only while chat is active ---------- */
+  .chat-panel {
+    --bubble: var(--glass);   /* same translucent card as the channel-name label under it */
+    position: absolute; left: 32px; bottom: 568px; width: 336px; max-height: 300px;
+    padding: 6px 0 2px 8px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; overflow: hidden;
+    opacity: 0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 40px); mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+  }
+  .chat-panel.active { opacity: 1; transform: none; }
+  .chat-panel .status { display: none; }
+  .chat-panel .msg { font-size: 16px; padding: 6px 11px 7px; border-radius: 8px; color: var(--white); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .chat-panel .msg:last-child::after { bottom: 7px; }
+  .chat-panel .msg.highlight { --bubble: rgba(122, 38, 84, .82); }   /* highlighted messages: pink-tinted glass */
+  .chat-panel .name { color: var(--white) !important; }
+  .chat-panel .name::before { width: 8px; height: 8px; margin-right: 6px; }
+  .chat-panel .badge { height: 15px; }
+  .chat-panel .emote { height: 22px; vertical-align: -5px; }
+
+  /* ---------- ?hud=1: top-right HUD readout ---------- */
+  .hud { position: absolute; right: 40px; top: 30px; text-align: right; text-shadow: 0 2px 6px rgba(0,0,0,.6); }
+  .hud .game { font: 700 30px/1 var(--hud); text-transform: uppercase; letter-spacing: .5px; }
+  .hud .clock { margin-top: 4px; font: 700 44px/1 var(--hud); font-variant-numeric: tabular-nums; }
+  .hud .up { margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; font: 600 22px/1 var(--hud); text-transform: uppercase; letter-spacing: 1px; }
+  .hud .up i { width: 10px; height: 10px; border-radius: 50%; background: var(--hot); }
+
+  /* ---------- ?news=1: phone notification, bottom right ---------- */
+  .news { position: absolute; right: 32px; bottom: 32px; width: 480px; transition: opacity .4s, transform .4s; }
+  .news.swap { opacity: 0; transform: translateY(8px); }
+
+  body.preview { background: url("../img/Jason_and_Lucia_03.jpg") center/cover; }
+</style>
+</head>
+<body>
+  <div class="hud" id="hud">
+    <div class="game" data-game></div>
+    <div class="clock" id="clock">--:--</div>
+    <div class="up"><i class="pulse"></i>En directo <span id="uptime">00:00</span></div>
+  </div>
+
+  <div class="news notif" id="news">
+    <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M4 5h13v14H6a2 2 0 0 1-2-2V5Zm15 4h2v8a2 2 0 0 1-2 2V9ZM7 8v3h7V8H7Zm0 5v1.5h7V13H7Zm0 3v1.5h5V16H7Z"/></svg></div>
+    <div><div class="n-title">Noticias de Leonida</div><div class="n-body" id="msg"></div></div>
+  </div>
+
+  <div class="chat-panel" data-chat></div>
+
+  <div class="cam">
+    <div class="frame"></div>
+    <div class="label"><div class="txt"><b data-channel></b><span>En directo · <span id="camUp">00:00</span></span></div><div class="sq"><i></i></div></div>
+  </div>
+
+<script src="../js/demo-data.js"></script>
+<script src="../js/config.defaults.js"></script>
+<script src="../config.js"></script>
+<script src="../js/common.js"></script>
+<script>
+  const { config, query, fmt, pad } = Overlay;
+  // top-left bar and "Noticias de Leonida" are hidden unless asked for (?hud=1, ?news=1)
+  const showNews = query.get("news") === "1";
+  if (query.get("hud") !== "1") document.getElementById("hud").remove();
+  if (!showNews) document.getElementById("news").remove();
+  if (query.get("preview") === "1") document.body.classList.add("preview");
+
+  // Chat panel: fades in on a new message, fades out (and clears) after chat.idleHide seconds of silence. ?chat=0 hides it.
+  const chatPanel = document.querySelector(".chat-panel");
+  if (query.get("chat") === "0") chatPanel.remove();
+  else {
+    const idle = ((config.chat || {}).idleHide ?? 25) * 1000; let hideT;
+    chatPanel.addEventListener("chat:message", () => {
+      chatPanel.classList.add("active"); clearTimeout(hideT);
+      hideT = setTimeout(() => {
+        chatPanel.classList.remove("active");
+        setTimeout(() => { if (!chatPanel.classList.contains("active")) chatPanel.querySelectorAll(".msg").forEach(m => m.remove()); }, 600);
+      }, idle);
+    });
+  }
+
+  const start = Date.now();
+  const clock = document.getElementById("clock") || {}, up = document.getElementById("uptime") || {}, camUp = document.getElementById("camUp");
+  setInterval(() => {
+    const d = new Date(); clock.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    up.textContent = camUp.textContent = fmt((Date.now() - start) / 1000);
+  }, 1000);
+
+  const msgs = config.tickerMessages || [], el = document.getElementById("msg"); let i = 0;
+  function rotate() { if (!el) return; if (!msgs.length) { el.closest(".news").remove(); return; }
+    const card = el.closest(".news"); card.classList.add("swap"); setTimeout(() => { el.textContent = msgs[i++ % msgs.length]; card.classList.remove("swap"); }, 400); }
+  rotate(); setInterval(rotate, 9000);
+</script>
+<script src="../js/chat.js"></script>
+</body>
+</html>

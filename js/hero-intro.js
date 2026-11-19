@@ -5,23 +5,27 @@
  *   3. Art scales down + sinks into a dark violet veil while the title holds…
  *   4. …then the veil lifts to reveal the live HTML scene underneath.
  *
- * Usage: <body data-intro-img="../assets/x.jpg" data-intro-title="BE RIGHT|BACK">
+ * Usage: <body data-intro-img="assets/x.jpg" data-intro-title="BE RIGHT|BACK">
+ *   data-intro-start="1.5" skips the first seconds (the zoom from huge letters), so the title is readable from the first frame.
  * Skip with ?intro=0. In OBS tick "Refresh browser when scene becomes active"
  * so it replays every time you switch to the scene.
  */
 (function () {
   const q = new URLSearchParams(location.search);
   const body = document.body;
-  const src = body.dataset.introImg;
+  const src = window.Overlay && Overlay.asset ? Overlay.asset(body.dataset.introImg) : body.dataset.introImg;   // relative to the overlay root
   if (!src || q.get("intro") === "0") { body.classList.add("intro-done"); return; }
 
   const lines = (body.dataset.introTitle || "").split("|");
   const W = 1920, H = 1080, DUR = 4.2;            // seconds
+  const START = Math.min(DUR, Math.max(0, parseFloat(body.dataset.introStart) || 0));   // skip ahead (seconds)
   const cv = document.createElement("canvas");
   cv.width = W; cv.height = H;
   cv.style.cssText = "position:fixed;inset:0;width:1920px;height:1080px;z-index:9999;pointer-events:none";
   body.appendChild(cv);
   const ctx = cv.getContext("2d");
+  // cover the scene right away (same veil as the first frame) so its background never shows before the title
+  { const g = ctx.createLinearGradient(0, 0, W * .4, H); g.addColorStop(0, "rgb(34,26,66)"); g.addColorStop(1, "rgb(14,10,28)"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
 
   // Offscreen layer for the masked title
   const mk = document.createElement("canvas"); mk.width = W; mk.height = H;
@@ -64,7 +68,7 @@
   let t0 = null;
   function frame(now) {
     if (t0 === null) t0 = now;
-    const t = (now - t0) / 1000;
+    const t = START + (now - t0) / 1000;
     ctx.clearRect(0, 0, W, H);
 
     // Phase timings
@@ -94,7 +98,7 @@
     const iw = img.width * s, ih = img.height * s;
     m.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
     const tint = m.createLinearGradient(0, H * .3, 0, H * .7);
-    tint.addColorStop(0, "#ffb15e"); tint.addColorStop(.5, "#ff4fa3"); tint.addColorStop(1, "#6b4fe0");
+    tint.addColorStop(0, "#ff4fa3"); tint.addColorStop(.5, "#c46be8"); tint.addColorStop(1, "#9b7bff");
     m.globalAlpha = 0.85 * bloom; m.fillStyle = tint; m.fillRect(0, 0, W, H); m.globalAlpha = 1;
     m.globalCompositeOperation = "source-over";
 

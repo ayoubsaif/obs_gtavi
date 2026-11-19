@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Empezamos en breve</title>
+<link rel="stylesheet" href="../css/common.css">
+<style>
+  /* Right column: info + subs (pause-menu list), chat bubbles fill the rest */
+  .chat-feed { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding-left: 8px;
+               -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60px); mask-image: linear-gradient(to bottom, transparent 0, #000 60px); }
+
+  /* ---------- ?cam=1 (starting-soon-cam.html): webcam replaces the subs block, 560x315 at x=1300, y=589 ----------
+     The page cuts a transparent hole there; the webcam source sits UNDER this browser source.
+     The chat ends above the cam's label card (y=513). */
+  .cam { display: none; left: 1300px; top: 589px; width: 560px; height: 315px; }
+  html.with-cam.has-scene { background: transparent; }
+  html.with-cam .scene { clip-path: path(evenodd, "M0 0H1920V1080H0Z M1300 589H1860V904H1300Z"); }
+  html.with-cam .side { bottom: 581px; }
+  html.with-cam .subs-block { display: none; }
+  html.with-cam .cam { display: block; }
+</style>
+<script>if (new URLSearchParams(location.search).get("cam") === "1") document.documentElement.classList.add("with-cam");</script>
+</head>
+<body data-intro-img="img/Jason_Lucia_Rooftop_landscape.jpg" data-intro-title="EMPEZAMOS|EN BREVE" data-intro-start="1.5">
+<div class="scene">
+  <canvas class="album" data-album data-fallback="img/Jason_Lucia_Rooftop_landscape.jpg"></canvas>
+  <div class="shade"></div>
+
+  <div class="topbar rise">
+    <span class="key">L1</span><span class="tab on">En breve</span><span class="tab">Vuelvo enseguida</span><span class="tab">Fin del directo</span><span class="key">R1</span>
+  </div>
+
+  <div class="copy">
+    <div class="eyebrow rise">Bienvenidos a Leonida</div>
+    <h1 class="title rise d1">Empezamos<br>en breve</h1>
+    <div class="big-num timer rise d2" id="timer">00:00:00</div>
+    <div class="caption rise d2" id="label">Pilla algo de beber. Arrancamos en nada</div>
+    <div class="hbar rise d3"><i id="bar"></i></div>
+  </div>
+
+  <div class="side rise d3">
+    <div class="menu">
+      <h2 data-channel></h2>
+      <div class="row"><span>Jugando a</span><span data-game></span></div>
+      <div class="subs-block">
+        <div class="note"><span data-support-line></span> · <span data-support-note></span></div>
+        <div class="goal"></div>
+        <div class="last-subs"></div>
+      </div>
+    </div>
+    <div class="chat-feed" data-chat></div>
+  </div>
+
+  <div class="socials rise d3"></div>
+  <div class="prompt rise d3"><span data-ticker></span><span class="btn-o"></span></div>
+</div>
+
+<!-- outside .scene so the hole's clip-path doesn't cut the frame -->
+<div class="cam rise d3">
+  <div class="frame"></div>
+  <div class="label"><div class="txt"><b data-channel></b><span>En directo en breve</span></div><div class="sq"><i></i></div></div>
+</div>
+
+<script src="../js/demo-data.js"></script>
+<script src="../js/config.defaults.js"></script>
+<script src="../config.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/twitch.js"></script>
+<script src="../js/fx.js"></script>
+<script src="../js/album.js"></script>
+<script src="../js/hero-intro.js"></script>
+<script src="../js/chat.js"></script>
+<script>
+  const { config, query, pad } = window.Overlay;
+  const hms = s => { s = Math.max(0, Math.floor(s));
+    return pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60); };
+
+  // Seconds until the next HH:MM:SS wall-clock time in the given time zone (independent of the PC's zone).
+  function secondsUntil(target, timeZone) {
+    const [th, tm, ts] = target.split(":").map(Number);
+    const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+      timeZone, hourCycle: "h23", hour: "2-digit", minute: "2-digit", second: "2-digit"
+    }).formatToParts(new Date()).map(p => [p.type, +p.value]));
+    const now = parts.hour * 3600 + parts.minute * 60 + parts.second + (Date.now() % 1000) / 1000;
+    let left = th * 3600 + tm * 60 + (ts || 0) - now;
+    if (left <= 0) left += 86400;
+    return left;
+  }
+
+  const mins = parseFloat(query.get("minutes"));       // ?minutes=10 still forces a plain countdown
+  const total = mins ? mins * 60
+    : secondsUntil(query.get("at") || config.countdownTo || "00:00:00", config.countdownZone || "Europe/Madrid");
+  const end = Date.now() + total * 1000;
+  const t = document.getElementById("timer"), b = document.getElementById("bar"), l = document.getElementById("label");
+  function tick() {
+    const left = (end - Date.now()) / 1000;
+    if (left <= 0) { t.textContent = "00:00:00"; l.textContent = "En cualquier momento…"; b.style.width = "100%"; return; }
+    t.textContent = hms(Math.ceil(left));
+    b.style.width = (100 * (1 - left / total)) + "%";
+    setTimeout(tick, 250);
+  }
+  tick();
+</script>
+</body>
+</html>

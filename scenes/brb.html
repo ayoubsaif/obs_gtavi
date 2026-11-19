@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vuelvo enseguida</title>
+<link rel="stylesheet" href="../css/common.css">
+<style>
+  .bg { background-image: url("../img/Jason_and_Lucia_Robbery_landscape.jpg"); background-position: 75% 40%; }
+</style>
+</head>
+<body data-intro-img="img/Jason_and_Lucia_Robbery_landscape.jpg" data-intro-title="VUELVO|ENSEGUIDA">
+<div class="scene">
+  <div class="bg"></div>
+  <div class="shade"></div>
+
+  <div class="topbar rise">
+    <span class="key">L1</span><span class="tab">En breve</span><span class="tab on">Vuelvo enseguida</span><span class="tab">Fin del directo</span><span class="key">R1</span>
+  </div>
+
+  <div class="copy">
+    <div class="eyebrow rise">Escondido un ratito</div>
+    <h1 class="title rise d1">Vuelvo<br>enseguida</h1>
+    <div class="big-num timer rise d2" id="away">00:00</div>
+    <div class="caption rise d2">Ausente · No toquéis el coche de la huida</div>
+  </div>
+
+  <div class="side rise d3">
+    <div class="menu">
+      <h2>Apoya el directo</h2>
+      <div class="note"><span data-support-line></span> · <span data-support-note></span></div>
+      <div class="row"><span>Mientras tanto</span><span>Escribe !lurk</span></div>
+      <div class="goal"></div>
+      <div class="last-subs"></div>
+    </div>
+  </div>
+
+  <div class="socials rise d3"></div>
+  <div class="prompt rise d3"><span data-ticker></span><span class="btn-o"></span></div>
+</div>
+
+<script src="../js/demo-data.js"></script>
+<script src="../js/config.defaults.js"></script>
+<script src="../config.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/twitch.js"></script>
+<script src="../js/hero-intro.js"></script>
+<script>
+  const start = Date.now(), el = document.getElementById("away");
+  setInterval(() => el.textContent = Overlay.fmt((Date.now() - start) / 1000), 500);
+</script>
+</body>
+</html>

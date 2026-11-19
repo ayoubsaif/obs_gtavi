@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajustes del overlay</title>
+<!--
+  Editor de config.js. Ábrelo con doble clic (Chrome o Edge) desde la carpeta del overlay.
+  Lee config.defaults.js + config.js, y al pulsar "Guardar" escribe config.js
+  (la primera vez pide elegir el archivo config.js de la carpeta del overlay; en otros navegadores lo descarga).
+  Los datos de ejemplo (últimos subs, chat y alertas de prueba) están en demo-data.js.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/ui.css">
+</head>
+<body>
+<header>
+  <div class="bar">
+  <h1>Ajustes del overlay</h1>
+  <span id="state">Cargando…</span>
+  <a class="crosslink" href="install.html" title="Generar la colección de escenas para OBS / Streamlabs con la carpeta correcta">Instalar en OBS →</a>
+  <div class="actions">
+    <button id="btnReload" title="Descartar cambios y volver a leer config.js">Recargar</button>
+    <button id="btnDownload" title="Descargar config.js para copiarlo a mano en la carpeta del overlay">Descargar</button>
+    <button id="btnSave" class="primary">Guardar config.js</button>
+  </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <div id="form"></div>
+  <section id="probar">
+    <h2>Probar las escenas</h2>
+    <p class="intro">Abre cada escena en una pestaña nueva con datos de prueba. Antes guarda, y en OBS pulsa <b>Actualizar</b> en cada fuente de navegador para que coja los cambios.</p>
+    <div class="tests">
+      <a href="scenes/starting-soon.html?test=1" target="_blank">Empezamos en breve</a>
+      <a href="scenes/starting-soon-cam.html?test=1" target="_blank">Empezamos (cámara)</a>
+      <a href="scenes/ingame.html?preview=1&test=1&hud=1&news=1" target="_blank">En partida</a>
+      <a href="scenes/brb.html" target="_blank">Vuelvo enseguida</a>
+      <a href="scenes/stream-ending.html" target="_blank">Fin del directo</a>
+      <a href="scenes/alerts.html?test=1&preview=1" target="_blank">Alertas</a>
+      <a href="scenes/chat.html?test=1&preview=1" target="_blank">Chat</a>
+    </div>
+    <p class="note">Los datos de ejemplo (últimos subs, mensajes del chat y alertas de prueba) están en <code>demo-data.js</code>.</p>
+  </section>
+</main>
+
+<script src="js/config.defaults.js"></script>
+<script>window.__DEFAULTS = window.OVERLAY_DEFAULTS || {}; window.OVERLAY_CONFIG = undefined;</script>
+<script src="config.js" onerror="window.__NO_CONFIG = true"></script>
+<script>
+(function () {
+  // ---------- schema: what the form shows. Anything else in config.js is kept as is. ----------
+  const ICONS = ["twitch", "x", "instagram", "tiktok", "youtube", "discord"];
+  const ZONES = ["Europe/Madrid", "Atlantic/Canary", "Europe/London", "Europe/Lisbon", "America/Mexico_City",
+                 "America/Bogota", "America/Argentina/Buenos_Aires", "America/Santiago", "America/New_York", "UTC"];
+  const SECTIONS = [
+    { id: "canal", title: "Canal", fields: [
+      { k: "channel", label: "Canal de Twitch", hint: "Sin @. Se usa para el chat y la etiqueta de la webcam." },
+      { k: "game", label: "Juego (si no hay categoría)", hint: "Con token de Twitch se usa la categoría del canal." },
+      { k: "nextStream", label: "Próximo directo", hint: "Se muestra en «Fin del directo».", wide: true } ] },
+    { id: "redes", title: "Redes sociales", intro: "Barra de redes de las pantallas completas. Vacía = se oculta.", fields: [
+      { k: "socials", type: "socials", wide: true } ] },
+    { id: "cuenta", title: "Cuenta atrás", intro: "«Empezamos en breve» cuenta hasta esta hora. Con ?at=21:30:00 en la URL se cambia sin tocar esto.", fields: [
+      { k: "countdownTo", type: "time", label: "Hora de inicio" },
+      { k: "countdownZone", type: "zone", label: "Zona horaria", hint: "Independiente de la del PC." },
+      { k: "startingMinutes", type: "number", min: 1, label: "Minutos fijos (?minutes)", hint: "Solo si la URL lleva ?minutes." } ] },
+    { id: "album", title: "Álbum de fotos", intro: "Fondo rotativo de «Empezamos en breve». Rutas relativas a la carpeta del overlay (p. ej. img/foto.jpg).", fields: [
+      { k: "albumSeconds", type: "number", min: 2, label: "Segundos por foto" },
+      { k: "album", type: "images", wide: true } ] },
+    { id: "ticker", title: "Mensajes del ticker", intro: "Textos que pasan en la cinta inferior.", fields: [
+      { k: "tickerMessages", type: "list", wide: true, placeholder: "Mensaje…" } ] },
+    { id: "apoyo", title: "Apoyo al canal", fields: [
+      { k: "support.line", label: "Frase principal", wide: true },
+      { k: "support.note", label: "Nota", wide: true } ] },
+    { id: "subs", title: "Subs y alertas", intro: "Si Twitch tiene un objetivo de subs activo, se usa ese en lugar de este.", fields: [
+      { k: "subs.goal.title", label: "Título del objetivo" },
+      { k: "subs.goal.current", type: "number", min: 0, label: "Subs actuales" },
+      { k: "subs.goal.target", type: "number", min: 1, label: "Meta de subs" },
+      { k: "subs.bigGift", type: "number", min: 1, label: "Regalo grande desde", hint: "Nº de subs regaladas para la alerta grande." },
+      { k: "subs.bigBits", type: "number", min: 1, label: "Bits grandes desde" },
+      { k: "subs.bigMonths", type: "number", min: 1, label: "Resub grande desde (meses)" },
+      { k: "subs.alertScale", type: "range", min: .2, max: 1, step: .01, label: "Tamaño de las alertas", hint: "0,43 ≈ 20 % del ancho de pantalla." },
+      { k: "subs.alertVolume", type: "range", min: 0, max: 1, step: .05, label: "Volumen", pct: true },
+      { k: "subs.alertSound", type: "sound", label: "Sonido de las alertas", hint: "Ruta desde la carpeta del overlay (p. ej. assets/sounds/alert_sound.mp3). Desmarca para quitar el sonido.", wide: true } ] },
+    { id: "chat", title: "Chat", fields: [
+      { k: "chat.idleHide", type: "number", min: 0, label: "Ocultar en partida tras (s)", hint: "Segundos sin mensajes; 0 = siempre visible." },
+      { k: "chat.maxMessages", type: "number", min: 1, label: "Máximo de mensajes" },
+      { k: "chat.hideCommands", type: "bool", label: "Ocultar comandos (!…)" },
+      { k: "chat.hideBots", type: "list", wide: true, label: "Bots ocultos", placeholder: "nombre del bot" } ] },
+    { id: "twitch", title: "Conexión con Twitch", intro: "Opcional: subs, bits, objetivo y categoría reales. Sin esto se usan los datos de ejemplo.", fields: [
+      { k: "twitch.clientId", label: "Client ID", hint: "De dev.twitch.tv/console → tu aplicación." },
+      { k: "twitch.token", type: "secret", label: "Token", hint: "⚠️ Privado: no compartas config.js." },
+      { type: "tokenHelp", wide: true } ] },
+    { id: "obs", title: "OBS WebSocket (panel de alertas)", intro: "Para control.html. OBS → Herramientas → Ajustes del servidor WebSocket.", fields: [
+      { k: "obs.host", label: "Servidor" },
+      { k: "obs.port", type: "number", min: 1, label: "Puerto" },
+      { k: "obs.password", type: "secret", label: "Contraseña" } ] }
+  ];
+
+  // ---------- data ----------
+  const merge = (a, b) => {
+    if (b === undefined) return a;
+    if (!b || typeof b !== "object" || Array.isArray(b)) return b;
+    const o = Object.assign({}, a && typeof a === "object" && !Array.isArray(a) ? a : {});
+    for (const k in b) o[k] = merge(o[k], b[k]);
+    return o;
+  };
+  const clone = o => JSON.parse(JSON.stringify(o ?? {}));
+  const get = (o, path) => path.split(".").reduce((x, k) => x == null ? undefined : x[k], o);
+  const set = (o, path, v) => { const ks = path.split("."); let x = o;
+    ks.slice(0, -1).forEach(k => { if (!x[k] || typeof x[k] !== "object") x[k] = {}; x = x[k]; }); x[ks.at(-1)] = v; };
+
+  let cfg;
+  function loadData() {
+    cfg = merge(clone(window.__DEFAULTS), clone(window.OVERLAY_CONFIG));
+    if (cfg.subs) delete cfg.subs.lastSubs;   // moved to demo-data.js
+  }
+
+  // ---------- form ----------
+  const $ = id => document.getElementById(id);
+  const h = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids.filter(k => k != null)); return e; };
+  let dirty = false;
+  const touch = () => { dirty = true; setState("Cambios sin guardar", "dirty"); };
+  const setState = (t, cls = "") => { $("state").textContent = t; $("state").className = cls; };
+
+  function listEditor(arr, makeRow, blank, addLabel) {
+    const wrap = h("div"), list = h("div", { className: "list" });
+    const draw = () => {
+      list.replaceChildren(...arr.map((v, i) => {
+        const row = h("div", { className: "item" }, ...makeRow(v, i, nv => { arr[i] = nv; touch(); }));
+        const btn = (txt, title, fn) => h("button", { className: "icon", type: "button", textContent: txt, title, onclick: () => { fn(); touch(); draw(); } });
+        row.append(
+          btn("↑", "Subir", () => i > 0 && arr.splice(i - 1, 0, arr.splice(i, 1)[0])),
+          btn("↓", "Bajar", () => i < arr.length - 1 && arr.splice(i + 1, 0, arr.splice(i, 1)[0])),
+          btn("✕", "Quitar", () => arr.splice(i, 1)));
+        return row;
+      }));
+    };
+    draw();
+    wrap.append(list, h("button", { className: "add", type: "button", textContent: "+ " + addLabel, onclick: () => { arr.push(blank()); touch(); draw(); list.lastChild?.querySelector("input")?.focus(); } }));
+    return wrap;
+  }
+
+  function control(f) {
+    const v = f.k ? get(cfg, f.k) : undefined;
+    const put = nv => { set(cfg, f.k, nv); touch(); };
+    const text = (type = "text") => h("input", { type, value: v ?? "", oninput: e => put(e.target.value) });
+    switch (f.type) {
+      case "number": return h("input", { type: "number", min: f.min ?? "", step: "any", value: v ?? "",
+        oninput: e => e.target.value !== "" && put(Number(e.target.value)) });
+      case "time": return h("input", { type: "time", step: 1, value: v || "00:00:00",
+        oninput: e => put(e.target.value.length === 5 ? e.target.value + ":00" : e.target.value) });
+      case "zone": {
+        const s = h("select", { onchange: e => put(e.target.value) });
+        [...new Set([v, ...ZONES].filter(Boolean))].forEach(z => s.append(h("option", { value: z, textContent: z, selected: z === v })));
+        return s;
+      }
+      case "range": {
+        const show = x => f.pct ? Math.round(x * 100) + " %" : Number(x).toFixed(2);
+        const out = h("output", { textContent: show(v ?? 0) });
+        return h("div", { className: "range" }, h("input", { type: "range", min: f.min, max: f.max, step: f.step, value: v ?? 0,
+          oninput: e => { out.textContent = show(e.target.value); put(Number(e.target.value)); } }), out);
+      }
+      case "bool": return h("label", { className: "check" }, h("input", { type: "checkbox", checked: !!v, onchange: e => put(e.target.checked) }));
+      case "secret": {
+        const inp = text("password");
+        return h("div", { className: "inline" }, inp, h("button", { type: "button", textContent: "Ver", onclick: e => {
+          inp.type = inp.type === "password" ? "text" : "password"; e.target.textContent = inp.type === "password" ? "Ver" : "Ocultar"; } }));
+      }
+      case "sound": {
+        const last = v || (window.__DEFAULTS.subs || {}).alertSound || "";
+        const inp = h("input", { type: "text", value: last, disabled: v === false, oninput: e => put(e.target.value) });
+        const on = h("input", { type: "checkbox", checked: v !== false, onchange: e => { inp.disabled = !e.target.checked; put(e.target.checked ? inp.value : false); } });
+        const play = h("button", { type: "button", textContent: "▶ Probar", onclick: () => {
+          const a = new Audio(inp.value); a.volume = get(cfg, "subs.alertVolume") ?? .8; a.play().catch(() => setState("No se pudo reproducir el sonido", "err")); } });
+        return h("div", { className: "inline" }, h("label", { className: "check" }, on), inp, play);
+      }
+      case "list": {
+        if (!Array.isArray(v)) set(cfg, f.k, []);
+        return listEditor(get(cfg, f.k), (x, i, upd) => [h("input", { type: "text", value: x, placeholder: f.placeholder || "", oninput: e => upd(e.target.value) })], () => "", "Añadir");
+      }
+      case "images": {
+        if (!Array.isArray(v)) set(cfg, f.k, []);
+        return listEditor(get(cfg, f.k), (x, i, upd) => {
+          const img = h("img", { src: x, alt: "", onerror: e => e.target.classList.add("broken"), onload: e => e.target.classList.remove("broken") });
+          return [img, h("input", { type: "text", value: x, placeholder: "img/foto.jpg", oninput: e => { upd(e.target.value); img.src = e.target.value; } })];
+        }, () => "img/", "Añadir foto");
+      }
+      case "socials": {
+        if (!Array.isArray(v)) set(cfg, f.k, []);
+        return listEditor(get(cfg, f.k), (x, i, upd) => {
+          const s = h("select", { onchange: e => { x = { ...x, icon: e.target.value }; upd(x); } });
+          [...new Set([...ICONS, x.icon].filter(Boolean))].forEach(n => s.append(h("option", { value: n, textContent: n, selected: n === x.icon })));
+          return [s, h("input", { type: "text", value: x.handle || "", placeholder: "@usuario", oninput: e => { x = { ...x, handle: e.target.value }; upd(x); } })];
+        }, () => ({ icon: "twitch", handle: "" }), "Añadir red");
+      }
+      case "tokenHelp": {
+        const link = h("a", { target: "_blank", style: "color:var(--cyan)" });
+        const upd = () => {
+          const id = get(cfg, "twitch.clientId") || "TU_CLIENT_ID";
+          link.href = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${encodeURIComponent(id)}&redirect_uri=http://localhost&scope=channel:read:subscriptions+bits:read+channel:read:goals`;
+          link.textContent = get(cfg, "twitch.clientId") ? "Obtener token de Twitch →" : "Pon primero el Client ID";
+        };
+        upd(); document.addEventListener("input", upd);
+        return h("small", {}, link, " Inicia sesión con tu canal, acepta y copia de la barra de direcciones lo que va entre ",
+          h("code", { textContent: "access_token=" }), " y ", h("code", { textContent: "&" }), ". El token caduca: si dejan de llegar alertas, repite.");
+      }
+      default: return text();
+    }
+  }
+
+  function render() {
+    $("nav").replaceChildren(...SECTIONS.map(s => h("a", { href: "#" + s.id, textContent: s.title })));
+    $("form").replaceChildren(...SECTIONS.map(s => {
+      const grid = h("div", { className: "grid" }, ...s.fields.map(f => {
+        const wrap = h("div", { className: "field" + (f.label ? "" : " bare") });
+        if (f.label) wrap.append(h("label", { textContent: f.label }));
+        wrap.append(control(f));
+        if (f.hint) wrap.append(h("small", { textContent: f.hint }));
+        return wrap;
+      }));
+      return h("section", { id: s.id }, h("h2", { textContent: s.title }), s.intro ? h("p", { className: "intro", textContent: s.intro }) : null, grid);
+    }));
+  }
+
+  // ---------- output ----------
+  function build() {
+    const out = clone(cfg);
+    ["socials", "album", "tickerMessages"].forEach(k => Array.isArray(out[k]) && (out[k] = out[k].filter(x => typeof x === "string" ? x.trim() : (x.handle || "").trim())));
+    if (out.chat && Array.isArray(out.chat.hideBots)) out.chat.hideBots = out.chat.hideBots.map(s => s.trim().toLowerCase()).filter(Boolean);
+    return "// ===== Ajustes del overlay =====\n" +
+      "// Generado por settings.html (ábrelo en Chrome/Edge para cambiarlo cómodamente).\n" +
+      "// Lo que falte aquí se toma de config.defaults.js. Datos de ejemplo: demo-data.js.\n" +
+      "// ⚠️ Contiene tu token de Twitch: no compartas este archivo.\n" +
+      "window.OVERLAY_CONFIG = " + JSON.stringify(out, null, 2) + ";\n";
+  }
+
+  // Remember the chosen config.js between visits (File System Access API, Chrome/Edge)
+  const idb = (mode, fn) => new Promise((res, rej) => {
+    const r = indexedDB.open("gta6-overlay-settings", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => { const tx = r.result.transaction("kv", mode), q = fn(tx.objectStore("kv")); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); };
+  });
+  const getHandle = () => idb("readonly", s => s.get("config")).catch(() => null);
+  const putHandle = hd => idb("readwrite", s => s.put(hd, "config")).catch(() => {});
+
+  function download() {
+    const a = h("a", { href: URL.createObjectURL(new Blob([build()], { type: "text/javascript" })), download: "config.js" });
+    a.click(); URL.revokeObjectURL(a.href);
+    dirty = false; setState("Descargado: copia config.js a la carpeta del overlay (reemplaza el anterior)", "ok");
+  }
+
+  async function save() {
+    if (!window.showSaveFilePicker) return download();
+    try {
+      let hd = await getHandle();
+      if (hd && (await hd.requestPermission({ mode: "readwrite" })) !== "granted") hd = null;
+      if (!hd) {
+        hd = await showSaveFilePicker({ suggestedName: "config.js", types: [{ description: "config.js", accept: { "text/javascript": [".js"] } }] });
+        if (hd.name !== "config.js" && !confirmName(hd.name)) return;
+        await putHandle(hd);
+      }
+      const w = await hd.createWritable(); await w.write(build()); await w.close();
+      dirty = false; setState("Guardado ✔ · Actualiza las fuentes en OBS", "ok");
+    } catch (e) {
+      if (e.name === "AbortError") return setState(dirty ? "Cambios sin guardar" : "", dirty ? "dirty" : "");
+      console.warn(e); setState("No se pudo guardar directamente; se descarga el archivo", "err"); download();
+    }
+  }
+  const confirmName = n => { setState(`Elegiste «${n}»: tiene que llamarse config.js (carpeta del overlay)`, "err"); return false; };
+
+  $("btnSave").onclick = save;
+  $("btnDownload").onclick = download;
+  $("btnReload").onclick = () => location.reload();
+  addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); } });
+  addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+  loadData(); render();
+  $("nav").append(h("a", { href: "#probar", textContent: "Probar" }));
+  const tabs = [...$("nav").querySelectorAll("a")];
+  const spy = () => {
+    let cur = tabs[0];
+    for (const t of tabs) { const sec = document.querySelector(t.getAttribute("href")); if (sec && sec.getBoundingClientRect().top < 160) cur = t; }
+    tabs.forEach(t => t.classList.toggle("on", t === cur));
+  };
+  addEventListener("scroll", spy, { passive: true }); spy();
+  if (window.__NO_CONFIG) setState("No hay config.js todavía: se usan los valores por defecto. Guarda para crearlo.", "dirty");
+  else setState("config.js cargado");
+})();
+</script>
+</body>
+</html>

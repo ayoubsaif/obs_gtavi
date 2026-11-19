@@ -3,62 +3,61 @@
 <head>
 <meta charset="utf-8">
 <title>Alertas Twitch</title>
-<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="../css/common.css">
 <style>
   html, body { background: transparent; }
-  body.preview { background: url("img/Jason_and_Lucia_03.jpg") center/cover; }
+  body.preview { background: url("../img/Jason_and_Lucia_03.jpg") center/cover; }
 
   #fx { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
 
-  /* --s = size of the alert (config.js → subs.alertScale); scaled from the top centre */
-  .alert { --s: .43; position: absolute; left: 50%; top: 60px; width: 900px; transform: translateX(-50%) scale(var(--s));
-           transform-origin: 50% 0; text-align: center; opacity: 0; pointer-events: none; }
-  .alert.show { animation: alertIn .9s cubic-bezier(.2,.9,.25,1.2) both; }
-  .alert.hide { animation: alertOut .6s ease-in both; }
-  @keyframes alertIn  { from { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(calc(var(--s) * .85)); } to { opacity: 1; transform: translateX(-50%) scale(var(--s)); } }
-  @keyframes alertOut { from { opacity: 1; transform: translateX(-50%) scale(var(--s)); } to { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(calc(var(--s) * .95)); } }
+  /* Phone notification dropping in at the top centre.
+     Authored 900px wide and scaled by --s (config.js → subs.alertScale; 0.43 ≈ 20% of the screen width). */
+  .alert { --s: .43; position: absolute; left: 50%; top: 40px; width: 900px; transform: translateX(-50%) scale(var(--s));
+           transform-origin: 50% 0; opacity: 0; pointer-events: none; font-family: var(--ui); }
+  .alert.show { animation: alertIn .7s cubic-bezier(.2,.9,.3,1.15) both; }
+  .alert.hide { animation: alertOut .5s ease-in both; }
+  @keyframes alertIn  { from { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(calc(var(--s) * .92)); } to { opacity: 1; transform: translateX(-50%) scale(var(--s)); } }
+  @keyframes alertOut { to { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(calc(var(--s) * .96)); } }
 
-  .alert .kicker { font-size: 58px; }
-  .plate { position: relative; margin: 0 auto; padding: 26px 48px 30px;
-           background: linear-gradient(180deg, rgba(18,8,31,.92), rgba(42,24,70,.88));
-           border-top: 5px solid transparent; border-image: var(--sunset) 1;
-           box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 60px rgba(255,79,163,.35); overflow: hidden; }
-  .plate::before { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.18) 50%, transparent 70%);
-    transform: translateX(-120%); animation: sweep 2.4s .4s ease-in-out infinite; }
-  @keyframes sweep { 55%, 100% { transform: translateX(120%); } }
-
-  .who { font-family: var(--display); font-weight: 500; font-size: 64px; letter-spacing: 2px; line-height: 1.05; }
-  .verb { font-family: var(--deco); font-size: 26px; letter-spacing: 8px; text-transform: uppercase; color: var(--orange); margin-top: 6px; }
-  .big { font-family: var(--display); font-weight: 500; font-size: 118px; line-height: 1.05; margin-top: 4px;
-         background: var(--sunset); -webkit-background-clip: text; background-clip: text; color: transparent;
-         filter: drop-shadow(0 5px 0 rgba(18,8,31,.9)) drop-shadow(0 0 26px rgba(255,177,94,.55)); }
-  .alert.cheer .big { background: linear-gradient(100deg, #3ff2ff, #a86bff 55%, #ff4fa3); -webkit-background-clip: text; background-clip: text; }
-  .msg { margin: 14px auto 0; max-width: 760px; font-size: 32px; font-weight: 600; line-height: 1.25; opacity: .95; }
+  .card { display: flex; align-items: center; gap: 34px; padding: 30px 44px 30px 30px; border-radius: 44px;
+          background: rgba(34,30,40,.86); -webkit-backdrop-filter: blur(30px); backdrop-filter: blur(30px);
+          box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+  .card .app-icon { width: 150px; height: 150px; }
+  .card .app-icon svg { width: 76px; height: 76px; }
+  .txt { flex: 1; min-width: 0; }
+  .app { display: flex; justify-content: space-between; font: 600 30px/1 var(--ui); letter-spacing: .5px; text-transform: uppercase; color: rgba(255,255,255,.6); }
+  .who { margin-top: 12px; font: 700 58px/1.1 var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .line { margin-top: 4px; font: 500 46px/1.2 var(--ui); color: rgba(255,255,255,.92); }
+  .line b { font-weight: 700; color: var(--pink); }
+  .alert.cheer .line b { color: var(--lilac); }
+  .msg { margin-top: 10px; font: 400 38px/1.3 var(--ui); color: rgba(255,255,255,.75); }
   .msg:empty { display: none; }
-  .tier { display: none; margin-top: 12px; font-family: var(--deco); font-size: 22px; letter-spacing: 10px; color: var(--cyan);
-          text-shadow: 0 0 14px rgba(63,242,255,.8); }
-  .alert.huge .tier { display: block; }
-  .alert.huge .plate { box-shadow: 0 20px 60px rgba(0,0,0,.45), 0 0 90px rgba(255,177,94,.6); }
+  /* big alerts: pink ring + "pez gordo" pill */
+  .alert.huge .card { box-shadow: 0 0 0 6px var(--pink), 0 30px 80px rgba(0,0,0,.4), 0 0 80px rgba(255,79,163,.5); }
+  .tier { display: none; margin-left: 14px; padding: 6px 16px; border-radius: 99px; background: var(--pink); color: #fff; font: 700 26px/1 var(--ui); letter-spacing: 1px; vertical-align: 8px; }
+  .alert.huge .tier { display: inline-block; }
 </style>
 </head>
 <body>
 <canvas id="fx" width="1920" height="1080"></canvas>
 
 <div class="alert" id="alert">
-  <div class="kicker" id="kicker"></div>
-  <div class="plate">
-    <div class="who" id="who"></div>
-    <div class="verb" id="verb"></div>
-    <div class="big" id="big"></div>
-    <div class="tier">★ Pez gordo ★</div>
-    <div class="msg" id="msg"></div>
+  <div class="card">
+    <div class="app-icon"><svg viewBox="0 0 24 24"><path d="M4 2 2.5 6v14h5v3h3l3-3h4l5-5V2H4Zm16 12-3 3h-4.5l-3 3v-3H5.5V4H20v10ZM16 7.5h2v6h-2v-6Zm-5 0h2v6h-2v-6Z"/></svg></div>
+    <div class="txt">
+      <div class="app"><span id="kicker"></span><span>ahora</span></div>
+      <div class="who"><span id="who"></span><span class="tier">Pez gordo</span></div>
+      <div class="line"><span id="verb"></span> <b id="big"></b></div>
+      <div class="msg" id="msg"></div>
+    </div>
   </div>
 </div>
 
-<script src="config.js"></script>
-<script src="common.js"></script>
-<script src="twitch.js"></script>
+<script src="../js/demo-data.js"></script>
+<script src="../js/config.defaults.js"></script>
+<script src="../config.js"></script>
+<script src="../js/common.js"></script>
+<script src="../js/twitch.js"></script>
 <script>
 /*
  * Alertas de Twitch: sub nueva, resub, subs regaladas y bits.
@@ -77,7 +76,7 @@
 
   // ---------- sound (config.js → subs.alertSound / subs.alertVolume; ?mute=1 silences it) ----------
   const sound = S.alertSound === false || query.get("mute") === "1" ? null
-    : new Audio(S.alertSound || "../assets/sounds/alert_sound.mp3");
+    : new Audio(S.alertSound || Overlay.asset("assets/sounds/alert_sound.mp3"));
   if (sound) { sound.preload = "auto"; sound.volume = Math.min(1, Math.max(0, S.alertVolume ?? .8)); }
   function ding() {
     if (!sound) return;
@@ -87,7 +86,7 @@
 
   // ---------- canvas particles ----------
   const cv = document.getElementById("fx"), ctx = cv.getContext("2d");
-  const COLORS = ["#ffb15e", "#ff4fa3", "#6b4fe0", "#3ff2ff", "#fff7fb"];
+  const COLORS = ["#ff4fa3", "#ff8fc6", "#9b7bff", "#3fe3cf", "#ffffff"];
   let parts = [], running = false;
 
   function burst(count, kind) {
@@ -133,10 +132,10 @@
   const tierTxt = t => t === "3000" ? "Nivel 3" : t === "2000" ? "Nivel 2" : "";
   function content(a) {
     switch (a.kind) {
-      case "sub":   return { kicker: "¡Nuevo sub!", verb: "se ha suscrito", big: tierTxt(a.tier) ? "SUB " + tierTxt(a.tier) : "SUB", huge: a.tier === "3000" };
-      case "resub": return { kicker: "¡Sigue en la banda!", verb: "lleva suscrito", big: `${a.months || 1} ${(a.months || 1) === 1 ? "MES" : "MESES"}`, huge: (a.months || 0) >= (S.bigMonths || 12) };
-      case "gift":  return { kicker: "¡Lluvia de regalos!", verb: "ha regalado", big: `${a.count || 1} ${(a.count || 1) === 1 ? "SUB" : "SUBS"}`, huge: (a.count || 0) >= (S.bigGift || 5) };
-      case "cheer": return { kicker: "¡Han caído bits!", verb: "ha enviado", big: `${a.bits} BITS`, huge: (a.bits || 0) >= (S.bigBits || 1000) };
+      case "sub":   return { kicker: "Twitch · Nuevo sub", verb: "Se ha suscrito", big: tierTxt(a.tier) ? "· " + tierTxt(a.tier) : "", huge: a.tier === "3000" };
+      case "resub": return { kicker: "Twitch · Resub", verb: "Lleva suscrito", big: `${a.months || 1} ${(a.months || 1) === 1 ? "mes" : "meses"}`, huge: (a.months || 0) >= (S.bigMonths || 12) };
+      case "gift":  return { kicker: "Twitch · Regalo", verb: "Ha regalado", big: `${a.count || 1} ${(a.count || 1) === 1 ? "sub" : "subs"}`, huge: (a.count || 0) >= (S.bigGift || 5) };
+      case "cheer": return { kicker: "Twitch · Bits", verb: "Ha enviado", big: `${a.bits} bits`, huge: (a.bits || 0) >= (S.bigBits || 1000) };
     }
   }
 
@@ -152,8 +151,8 @@
     el.classList.toggle("cheer", a.kind === "cheer");
     el.classList.remove("hide"); void el.offsetWidth; el.classList.add("show");
     ding();
-    burst(c.huge ? 220 : 110, a.kind);
-    if (c.huge) setTimeout(() => burst(120, a.kind), 700);
+    if (c.huge) burst(200, a.kind);   // confetti only for the big ones
+    if (c.huge) setTimeout(() => burst(110, a.kind), 700);
     setTimeout(() => {
       el.classList.remove("show"); el.classList.add("hide");
       setTimeout(() => { busy = false; if (queue.length) play(queue.shift()); }, 900);
@@ -165,15 +164,10 @@
 
   if (query.get("preview") === "1") document.body.classList.add("preview");
   if (query.get("test") === "1") {
-    const samples = [
-      { kind: "sub", name: "Lucia_Fan", tier: "1000" },
-      { kind: "resub", name: "ViceCityVIP", months: 14, message: "¡Un año más en Leonida! 🌴" },
-      { kind: "gift", name: "JasonDuval_ES", count: 5 },
-      { kind: "cheer", name: "PalmeraNeon", bits: 500, message: "¡Pilla ese coche para la huida!" }
-    ];
+    const samples = Overlay.demo.alerts || [];   // demo-data.js
     let i = 0;
     const fire = () => show(samples[i++ % samples.length]);   // only the alert, list/goal untouched
-    setTimeout(fire, 800); setInterval(fire, 10000);
+    if (samples.length) { setTimeout(fire, 800); setInterval(fire, 10000); }
   }
 })();
 </script>

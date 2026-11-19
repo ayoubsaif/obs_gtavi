@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transiciones</title>
+<!--
+  Genera las transiciones animadas de OBS (stingers): los mismos efectos que el álbum de
+  «Empezamos en breve» (fx.js), con la tarjeta «Misión superada» y el sonido mezclado.
+  Ábrelo con doble clic en Chrome o Edge. Guarda los vídeos en assets/stingers/<efecto>.webm
+  (vídeo WebM con transparencia + audio). Luego, en install.html, activa «Transiciones animadas».
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+  @font-face { font-family: "GTA Art Deco"; src: url("assets/fonts/GTA%20Art%20Deco%20-%20Medium.ttf") format("truetype"); font-weight: 500 900; }
+  .stage { position: relative; margin-top: 14px; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9;
+           background: repeating-conic-gradient(#3a3046 0 25%, #2a2234 0 50%) 0 0 / 32px 32px; }   /* checkerboard = transparent */
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fxlist { display: flex; flex-direction: column; }
+  .fxrow { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .fxrow b { font: 600 21px/1.1 var(--hud); letter-spacing: .5px; text-transform: uppercase; }
+  .fxrow small { display: block; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Transiciones</h1>
+    <span id="state"></span>
+    <a class="crosslink" href="install.html">← Instalar en OBS</a>
+    <div class="actions">
+      <button id="btnGen" class="primary" title="Graba los 5 vídeos y los guarda en assets/stingers">Generar y guardar</button>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <section id="preview" data-title="Vista previa">
+    <h2>Vista previa</h2>
+    <p class="intro">Los mismos efectos que el álbum de «Empezamos en breve». El efecto tapa la pantalla con la tarjeta «Misión superada», OBS cambia de escena por detrás y el efecto se deshace mostrando la escena nueva. El cuadriculado es lo transparente.</p>
+    <div class="stage"><canvas id="cv" width="1920" height="1080"></canvas></div>
+  </section>
+
+  <section id="efectos" data-title="Escenas">
+    <h2>Efecto de cada escena</h2>
+    <p class="intro">OBS no tiene transición aleatoria: cada escena usa su efecto al cambiar <b>a</b> ella (anulación de transición por escena).</p>
+    <div class="fxlist" id="fxlist"></div>
+  </section>
+
+  <section id="sonido" data-title="Sonido">
+    <h2>Sonido</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="len">Duración</label>
+        <select id="len">
+          <option value="full">Completo</option>
+          <option value="3">Corto: 3 s con fundido</option>
+          <option value="0">Sin sonido</option>
+        </select>
+        <small>Mientras dura la transición OBS no deja lanzar otra. Con el sonido completo son unos 8 s; en corto, 3 s.</small>
+      </div>
+      <div class="field">
+        <label for="file">Otro sonido</label>
+        <input type="file" id="file" accept="audio/*">
+        <small>Opcional. Por defecto, <code>assets/sounds/everglades_mission_passed.mp3</code>.</small>
+      </div>
+    </div>
+  </section>
+
+  <section id="generar" data-title="Generar">
+    <h2>Generar e instalar</h2>
+    <ol class="steps">
+      <li><span>Pulsa <b>Generar y guardar</b> y elige la carpeta <code>assets</code> del overlay (o la carpeta del overlay: se usa su <code>assets</code>). Se crea <code>assets/stingers</code> con los 5 vídeos.</span></li>
+      <li><span>Se graban en tiempo real (unos <b id="eta">40 s</b>): deja esta pestaña visible hasta que termine.</span></li>
+      <li><span>Abre <a href="install.html#lienzo">Instalar en OBS</a>, activa <b>Transiciones animadas</b>, descarga la colección e impórtala.</span></li>
+    </ol>
+    <p class="note">En navegadores sin acceso a carpetas, los vídeos se descargan: muévelos a <code>assets/stingers</code> con estos nombres: <code>crosszoom.webm</code>, <code>wipe.webm</code>, <code>blinds.webm</code>, <code>iris.webm</code>, <code>push.webm</code>.</p>
+  </section>
+</main>
+
+<script src="js/fx.js"></script>
+<script src="js/collection.js"></script>
+<script src="assets/sounds/everglades_mission_passed.js"></script>
+<script>
+(function () {
+  const Fx = window.OverlayFx, C = window.OVERLAY_COLLECTION, S = C.STINGER;
+  const $ = id => document.getElementById(id);
+  const W = 1920, H = 1080, cv = $("cv"), ctx = cv.getContext("2d");
+  const setState = (t, cls = "") => { $("state").textContent = t; $("state").className = cls; };
+  const EFFECTS = Object.keys(S.names);
+  const VISUAL = S.inMs + S.holdMs + S.outMs;
+
+  // ---------- the "Misión superada" card (pause-menu look) ----------
+  function cover(life, scale = 1, offX = 0) {
+    ctx.save();
+    ctx.translate(W / 2 + offX, H / 2); ctx.scale(scale, scale); ctx.translate(-W / 2, -H / 2);
+    const g = ctx.createLinearGradient(0, 0, W * .6, H);
+    g.addColorStop(0, "#2f2340"); g.addColorStop(.45, "#5d3a76"); g.addColorStop(.8, "#93558f"); g.addColorStop(1, "#b0679c");
+    ctx.fillStyle = g; ctx.fillRect(-W * .2, -H * .2, W * 1.4, H * 1.4);
+    const v = ctx.createLinearGradient(0, H * .55, 0, H); v.addColorStop(0, "rgba(23,18,29,0)"); v.addColorStop(1, "rgba(23,18,29,.55)");
+    ctx.fillStyle = v; ctx.fillRect(-W * .2, 0, W * 1.4, H * 1.2);
+    // title, slowly growing while it holds
+    const k = 1 + .03 * Math.min(1, life / VISUAL);
+    ctx.translate(W / 2, H / 2); ctx.scale(k, k);
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const tg = ctx.createLinearGradient(0, -110, 0, 110);
+    tg.addColorStop(0, "#ffb15e"); tg.addColorStop(.5, "#ff4fa3"); tg.addColorStop(1, "#9b7bff");
+    ctx.font = '500 150px "GTA Art Deco", "Barlow Condensed", Impact, sans-serif';
+    ctx.shadowColor = "rgba(255,79,163,.6)"; ctx.shadowBlur = 50; ctx.fillStyle = tg;
+    ctx.fillText("MISIÓN", 0, -78); ctx.fillText("SUPERADA", 0, 70);
+    ctx.shadowBlur = 0;
+    const bar = ctx.createLinearGradient(-260, 0, 260, 0); bar.addColorStop(0, "rgba(255,255,255,.9)"); bar.addColorStop(1, "#ff4fa3");
+    ctx.fillStyle = bar; ctx.fillRect(-260, 168, 520, 3);
+    ctx.restore();
+  }
+
+  // one stinger frame at time ms: effect in (transparent -> card), hold, effect back out (card -> transparent)
+  function frame(fx, ms) {
+    ctx.clearRect(0, 0, W, H);
+    const none = () => {}, card = (sc, off) => cover(ms, sc, off);
+    if (ms < S.inMs) Fx.draw(ctx, fx, Fx.ease(ms / S.inMs), none, card, W, H);
+    else if (ms < S.inMs + S.holdMs) cover(ms);
+    else if (ms < VISUAL) Fx.draw(ctx, fx, Fx.ease(1 - (ms - S.inMs - S.holdMs) / S.outMs), none, card, W, H);
+  }
+
+  // ---------- sound ----------
+  let ac, soundBuf = null;
+  const audioCtx = () => ac || (ac = new AudioContext());
+  async function loadDefaultSound() {
+    const b64 = window.MISSION_PASSED_MP3; if (!b64) return null;
+    const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return audioCtx().decodeAudioData(u8.buffer);
+  }
+  $("file").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { soundBuf = await audioCtx().decodeAudioData(await f.arrayBuffer()); setState(`Sonido: ${f.name} (${soundBuf.duration.toFixed(1)} s)`, "ok"); updateEta(); }
+    catch (err) { setState("No se pudo leer ese audio", "err"); }
+  };
+  const soundLen = () => { const m = $("len").value; if (m === "0" || !soundBuf) return 0; return m === "full" ? soundBuf.duration : Math.min(+m, soundBuf.duration); };
+  const totalMs = () => Math.max(VISUAL + 150, soundLen() * 1000);
+  // plays the sound into `dest`; fades out the short version
+  function playSound(dest) {
+    const len = soundLen(); if (!len) return null;
+    const a = audioCtx(), src = a.createBufferSource(), gain = a.createGain();
+    src.buffer = soundBuf; src.connect(gain); gain.connect(dest);
+    const t = a.currentTime;
+    if ($("len").value !== "full") { gain.gain.setValueAtTime(1, t + Math.max(0, len - .6)); gain.gain.linearRampToValueAtTime(0, t + len); }
+    src.start(t, 0, len); return src;
+  }
+  function updateEta() { $("eta").textContent = Math.ceil(EFFECTS.length * (totalMs() + 400) / 1000) + " s"; }
+  $("len").onchange = updateEta;
+
+  // ---------- animation loop (rAF + timer fallback, like the overlay pages) ----------
+  function run(fx, onFrame) {
+    return new Promise(res => {
+      const total = totalMs(), t0 = performance.now();
+      const step = () => {
+        const ms = performance.now() - t0;
+        frame(fx, ms); onFrame && onFrame(ms, total);
+        if (ms >= total) return res();
+        let fired = false; const go = () => { if (!fired) { fired = true; step(); } };
+        requestAnimationFrame(go); setTimeout(go, 16);
+      };
+      step();
+    });
+  }
+
+  let busy = false;
+  async function preview(fx) {
+    if (busy) return; busy = true;
+    try { await audioCtx().resume(); playSound(audioCtx().destination); await run(fx); }
+    finally { busy = false; frame(fx, S.inMs + 1); }
+  }
+
+  // ---------- WebM duration: MediaRecorder leaves it out, but OBS times the stinger by the video length ----------
+  function withDuration(u8, ms) {
+    const vlen = b => { let n = 1, m = 0x80; while (n <= 8 && !(b & m)) { n++; m >>= 1; } return n; };
+    const id = p => { const n = vlen(u8[p]); let v = 0; for (let i = 0; i < n; i++) v = v * 256 + u8[p + i]; return { v, n }; };
+    const size = p => { const n = vlen(u8[p]); let v = u8[p] & (0xff >> n), unknown = v === (0xff >> n);
+      for (let i = 1; i < n; i++) { v = v * 256 + u8[p + i]; if (u8[p + i] !== 0xff) unknown = false; } return { v, n, unknown }; };
+    const f64 = x => { const b = new Uint8Array(8); new DataView(b.buffer).setFloat64(0, x); return b; };
+    let p = 0;
+    const ebml = id(p); if (ebml.v !== 0x1A45DFA3) throw new Error("no es un WebM");
+    let s = size(p + ebml.n); p += ebml.n + s.n + s.v;
+    const seg = id(p); if (seg.v !== 0x18538067) throw new Error("WebM sin Segment");
+    s = size(p + seg.n); p += seg.n + s.n;
+    const segEnd = s.unknown ? u8.length : p + s.v;
+    while (p < segEnd) {
+      const e = id(p), es = size(p + e.n), data = p + e.n + es.n;
+      if (e.v === 0x1549A966) {                                   // Info
+        for (let q = data; q < data + es.v;) {
+          const c = id(q), cs = size(q + c.n), cd = q + c.n + cs.n;
+          if (c.v === 0x4489) {                                  // Duration already there: overwrite it
+            const out = u8.slice(); if (cs.v === 8) out.set(f64(ms), cd); else new DataView(out.buffer).setFloat32(cd, ms); return out;
+          }
+          q = cd + cs.v;
+        }
+        const add = new Uint8Array([0x44, 0x89, 0x88, ...f64(ms)]);   // Duration (float64, in TimecodeScale = 1 ms units)
+        const newSize = es.v + add.length;
+        if (newSize >= 2 ** (7 * es.n) - 1) throw new Error("Info demasiado grande");
+        const sz = new Uint8Array(es.n); let v = newSize;
+        for (let i = es.n - 1; i >= 0; i--) { sz[i] = v & 0xff; v = Math.floor(v / 256); }
+        sz[0] |= 0x80 >> (es.n - 1);
+        const end = data + es.v, out = new Uint8Array(u8.length + add.length);
+        out.set(u8.subarray(0, p + e.n)); out.set(sz, p + e.n); out.set(u8.subarray(data, end), data);
+        out.set(add, end); out.set(u8.subarray(end), end + add.length);
+        return out;
+      }
+      if (es.unknown) break;
+      p = data + es.v;
+    }
+    throw new Error("WebM sin Info");
+  }
+
+  // ---------- recording ----------
+  const MIME = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  async function record(fx, onProgress) {
+    const a = audioCtx(); await a.resume();
+    const dest = a.createMediaStreamDestination();
+    const tracks = [...cv.captureStream(60).getVideoTracks()];
+    if (soundLen()) tracks.push(...dest.stream.getAudioTracks());
+    const rec = new MediaRecorder(new MediaStream(tracks), { mimeType: MIME, videoBitsPerSecond: 12e6 });
+    const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    const stopped = new Promise(r => rec.onstop = r);
+    ctx.clearRect(0, 0, W, H);
+    rec.start(250); const t0 = performance.now();
+    await new Promise(r => setTimeout(r, S.prerollMs));  // transparent pre-roll so the encoder is running before the effect starts
+    playSound(dest);
+    await run(fx, onProgress);
+    ctx.clearRect(0, 0, W, H);
+    await new Promise(r => setTimeout(r, 120));
+    rec.stop(); await stopped; const ms = performance.now() - t0;
+    tracks.forEach(t => t.stop());
+    const raw = new Uint8Array(await new Blob(chunks).arrayBuffer());
+    return new Blob([withDuration(raw, ms)], { type: "video/webm" });
+  }
+
+  async function pickStingerDir() {
+    if (!window.showDirectoryPicker) return null;
+    const dir = await showDirectoryPicker({ id: "gta6-overlay-assets", mode: "readwrite" });
+    let assets = dir;
+    if (dir.name !== "assets") {
+      try { assets = await dir.getDirectoryHandle("assets"); }
+      catch (e) { throw new Error(`«${dir.name}» no es la carpeta assets del overlay (ni la contiene)`); }
+    }
+    return assets.getDirectoryHandle(S.dir, { create: true });
+  }
+  function download(name, blob) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  $("btnGen").onclick = async () => {
+    if (busy) return;
+    if (!MIME) return setState("Este navegador no puede grabar vídeo WebM: usa Chrome o Edge", "err");
+    let dir = null;
+    try { dir = await pickStingerDir(); }
+    catch (e) { if (e.name === "AbortError") return; return setState(e.message, "err"); }
+    busy = true; $("btnGen").disabled = true;
+    try {
+      for (const [i, fx] of EFFECTS.entries()) {
+        const pill = $("st-" + fx); pill.textContent = "Grabando…"; pill.className = "pill warn";
+        const blob = await record(fx, (ms, total) => setState(`Grabando ${i + 1}/${EFFECTS.length}: ${S.names[fx]} · ${Math.min(100, Math.round(100 * ms / total))} %`, "dirty"));
+        if (dir) { const w = await (await dir.getFileHandle(fx + ".webm", { create: true })).createWritable(); await w.write(blob); await w.close(); }
+        else download(fx + ".webm", blob);
+        pill.textContent = `✔ ${(blob.size / 1024).toFixed(0)} KB`; pill.className = "pill ok";
+      }
+      setState(dir ? "✔ Guardados en assets/stingers · ahora genera la colección en Instalar en OBS" : "✔ Descargados: muévelos a assets/stingers", "ok");
+    } catch (e) { console.warn(e); setState("Error al grabar: " + e.message, "err"); }
+    finally { busy = false; $("btnGen").disabled = false; frame(EFFECTS[0], S.inMs + 1); }
+  };
+
+  // ---------- effect list ----------
+  const usedBy = fx => Object.entries(S.sceneFx).filter(([, f]) => f === fx).map(([s]) => s.replace("GTA VI · ", ""));
+  $("fxlist").replaceChildren(...EFFECTS.map(fx => {
+    const row = document.createElement("div"); row.className = "fxrow";
+    const who = usedBy(fx).join(", ") || "—";
+    row.innerHTML = `<div><b></b><small></small></div><span class="pill" id="st-${fx}">Sin generar</span><button type="button">▶ Ver</button>`;
+    row.querySelector("b").textContent = S.names[fx];
+    row.querySelector("small").textContent = "Al cambiar a: " + who + (fx === S.defaultFx ? " · transición por defecto" : "");
+    row.querySelector("button").onclick = () => preview(fx);
+    return row;
+  }));
+
+  // already generated? (best effort: file:// videos can be probed with a <video>)
+  EFFECTS.forEach(fx => {
+    const v = document.createElement("video"); v.preload = "metadata"; v.muted = true;
+    v.onloadedmetadata = () => { const p = $("st-" + fx); if (p.textContent === "Sin generar") { p.textContent = "✔ Ya existe"; p.className = "pill ok"; } };
+    v.src = `assets/${S.dir}/${fx}.webm?${Date.now()}`;
+  });
+
+  // nav tabs + scroll spy (as in settings.html)
+  const secs = [...document.querySelectorAll("section[data-title]")];
+  $("nav").replaceChildren(...secs.map(s => Object.assign(document.createElement("a"), { href: "#" + s.id, textContent: s.dataset.title })));
+  const tabs = [...$("nav").querySelectorAll("a")];
+  const spy = () => { let cur = tabs[0];
+    for (const t of tabs) { const s = document.querySelector(t.getAttribute("href")); if (s && s.getBoundingClientRect().top < 160) cur = t; }
+    tabs.forEach(t => t.classList.toggle("on", t === cur)); };
+  addEventListener("scroll", spy, { passive: true }); spy();
+
+  // init
+  (document.fonts ? document.fonts.load('500 150px "GTA Art Deco"') : Promise.resolve()).catch(() => {}).then(() => frame(EFFECTS[0], S.inMs + 1));
+  loadDefaultSound().then(b => { soundBuf = soundBuf || b; updateEta(); setState(b ? `Sonido: Misión superada (${b.duration.toFixed(1)} s)` : "Sin sonido por defecto: elige uno", b ? "" : "dirty"); })
+    .catch(() => setState("No se pudo decodificar el sonido por defecto", "err"));
+  updateEta();
+})();
+</script>
+</body>
+</html>

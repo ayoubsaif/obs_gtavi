@@ -1,10 +1,10 @@
 /*
  * Twitch data for the overlay: sub goal, last 5 subs, current category, and live alerts (subs, resubs, gifts, bits).
  *
- *  - Without credentials it uses the values in config.js (subs.goal / subs.lastSubs).
+ *  - Without credentials it uses subs.goal from config.js and the example subs from demo-data.js.
  *  - With config.twitch.clientId + token it connects to Twitch EventSub (WebSocket) and
  *    updates live; on load the last-subs list is filled with real subscribers from Helix
- *    (replacing the config.js examples). Needed token scopes: channel:read:subscriptions bits:read channel:read:goals
+ *    (replacing the demo-data.js examples). Needed token scopes: channel:read:subscriptions bits:read channel:read:goals
  *  - The last-subs list and goal are cached in localStorage, so every scene shows the same data
  *    and it survives OBS restarts.
  *
@@ -14,6 +14,7 @@
  */
 (function () {
   const C = Overlay.config, S = C.subs || {}, T = C.twitch || {};
+  const EXAMPLES = () => (S.lastSubs || Overlay.demo.lastSubs || []).slice(0, 5);   // demo-data.js
   const KEY = "gta6-overlay.subs.v1";
   const handlers = { alert: [], update: [] };
   const emit = (type, data) => handlers[type].forEach(fn => { try { fn(data); } catch (e) { console.error(e); } });
@@ -24,9 +25,9 @@
   const cached = load();
   const state = {
     goal: (cached && cached.goal) || (S.goal ? { ...S.goal } : null),
-    lastSubs: (cached && cached.lastSubs) || (S.lastSubs || []).slice(0, 5)
+    lastSubs: (cached && cached.lastSubs) || EXAMPLES()
   };
-  if (Overlay.query.get("reset") === "1") { state.goal = S.goal ? { ...S.goal } : null; state.lastSubs = (S.lastSubs || []).slice(0, 5); save(); }
+  if (Overlay.query.get("reset") === "1") { state.goal = S.goal ? { ...S.goal } : null; state.lastSubs = EXAMPLES(); save(); }
 
   let liveGoal = false;
   function addSub(s) {   // only called for real subs received while the overlay runs

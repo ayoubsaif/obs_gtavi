@@ -1,5 +1,25 @@
 (function () {
-  const C = window.OVERLAY_CONFIG || {};
+  // Overlay root = the folder above js/ (this script lives in <root>/js/common.js). Paths in config
+  // (album photos, alert sound) and data-intro-img / data-fallback are relative to that root, so they
+  // work the same from pages in scenes/ and from the root pages.
+  const ROOT = (() => {
+    try { const s = document.currentScript && document.currentScript.src; if (s) return new URL("../", s).href; } catch (e) {}
+    return new URL(/\/scenes\/[^/]*$/.test(location.pathname) ? "../" : "./", location.href).href;
+  })();
+  const asset = p => (typeof p !== "string" || !p || /^([a-z][a-z0-9+.-]*:|\/|#)/i.test(p)) ? p : new URL(p, ROOT).href;
+
+  // config.defaults.js + config.js (deep merge: objects are merged, arrays and values replaced)
+  const merge = (a, b) => {
+    if (b === undefined) return a;
+    if (!b || typeof b !== "object" || Array.isArray(b)) return b;
+    const o = Object.assign({}, a && typeof a === "object" && !Array.isArray(a) ? a : {});
+    for (const k in b) o[k] = merge(o[k], b[k]);
+    return o;
+  };
+  const C = window.OVERLAY_CONFIG = merge(window.OVERLAY_DEFAULTS || {}, window.OVERLAY_CONFIG || {});
+  if (Array.isArray(C.album)) C.album = C.album.map(asset);
+  if (C.subs && C.subs.alertSound) C.subs.alertSound = asset(C.subs.alertSound);
+  const DEMO = window.OVERLAY_DEMO || {};
   const q = new URLSearchParams(location.search);
 
   const ICONS = {
@@ -44,6 +64,14 @@
     document.querySelectorAll("[data-support-line]").forEach(el => el.textContent = SP.line || "");
     document.querySelectorAll("[data-support-note]").forEach(el => el.textContent = SP.note || "");
 
+    // Rotating button prompt (bottom right): one ticker message at a time
+    document.querySelectorAll("[data-ticker]").forEach(el => {
+      const msgs = C.tickerMessages || [], wrap = el.closest(".prompt") || el; let i = 0;
+      if (!msgs.length) { wrap.remove(); return; }
+      const next = () => { wrap.style.opacity = 0; setTimeout(() => { el.textContent = msgs[i++ % msgs.length]; wrap.style.opacity = 1; }, 400); };
+      next(); setInterval(next, 7000);
+    });
+
     document.querySelectorAll(".ticker-track").forEach(t => {
       const msgs = C.tickerMessages || [];
       const html = msgs.map(m => `<span>${m}</span>`).join("");
@@ -60,6 +88,6 @@
   }
   fit(); addEventListener("resize", fit); document.addEventListener("DOMContentLoaded", fit);
 
-  window.Overlay = { config: C, query: q, fmt, pad, ICONS, setGame };
+  window.Overlay = { config: C, demo: DEMO, merge, query: q, fmt, pad, ICONS, setGame, root: ROOT, asset };
   document.addEventListener("DOMContentLoaded", fill);
 })();

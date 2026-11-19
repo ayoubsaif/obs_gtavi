@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <title>Chat Twitch</title>
-<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="../css/common.css">
 <style>
   html, body { background: transparent; }
-  body.preview { background: url("img/Jason_and_Lucia_03.jpg") center/cover; }
+  body.preview { background: url("../img/Jason_and_Lucia_03.jpg") center/cover; }
 
   /* Same box as the chat card in ingame.html (x=40, y=480, 400x560) */
   .chat-box {
@@ -21,9 +21,11 @@
 <body>
 <div class="chat-box" data-chat></div>
 
-<script src="config.js"></script>
-<script src="common.js"></script>
+<script src="../js/demo-data.js"></script>
+<script src="../js/config.defaults.js"></script>
+<script src="../config.js"></script>
+<script src="../js/common.js"></script>
 <script>if (Overlay.query.get("preview") === "1") document.body.classList.add("preview");</script>
-<script src="chat.js"></script>
+<script src="../js/chat.js"></script>
 </body>
 </html>

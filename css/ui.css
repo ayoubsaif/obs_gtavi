@@ -1,0 +1,154 @@
+/* ============================================================================
+   Admin pages (settings.html, install.html, control.html dock) — GTA VI pause-menu
+   look: violet backdrop, dark tab bar, label/value rows with thin dividers,
+   phone-style controls. Keep it CEF-safe (OBS docks): no has-selectors, no CSS nesting.
+   ============================================================================ */
+:root {
+  --bar: #26202e; --text: #fff; --muted: rgba(255,255,255,.62); --line: rgba(255,255,255,.2);
+  --field: rgba(20,14,28,.38); --pink: #ff4fa3; --lilac: #9b7bff; --teal: #3fe3cf; --ok: #4ade80; --bad: #ff7b8a; --warn: #ffd36e;
+  --orange: #ffb15e;
+  --hud: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --ui: "Inter", -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #3a2850; }
+body { min-height: 100vh; color: var(--text); font: 15px/1.4 var(--ui);
+       background: linear-gradient(160deg, #2f2340 0%, #5d3a76 45%, #93558f 80%, #b0679c 100%) fixed; }
+
+header { position: sticky; top: 0; z-index: 5; background: var(--bar); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; max-width: 1040px; margin: 0 auto; padding: 12px 20px; }
+header h1 { font: 700 26px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; }
+#state { font: 500 13px/1.3 var(--ui); color: var(--muted); }
+#state.dirty { color: var(--warn); } #state.ok { color: var(--ok); } #state.err { color: var(--bad); }
+.actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+a.crosslink { font: 600 18px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; color: var(--pink); text-decoration: none; }
+a.crosslink:hover { color: #fff; }
+/* section tabs, like the pause menu's  L1  JASON / LUCIA  MAP  BRIEF  R1 */
+nav { display: flex; gap: 26px; overflow-x: auto; max-width: 1040px; margin: 0 auto; padding: 4px 20px 0; scrollbar-width: none; }
+nav a { position: relative; flex: none; padding: 8px 0 12px; font: 600 21px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase;
+        color: rgba(255,255,255,.88); text-decoration: none; }
+nav a:hover { color: #fff; }
+nav a.on { color: var(--pink); }
+nav a.on::after { content: ""; position: absolute; left: -4px; right: -4px; bottom: 4px; height: 2px; background: var(--pink); }
+
+main { max-width: 1040px; margin: 0 auto; padding: 26px 20px 80px; }
+section { margin-bottom: 40px; scroll-margin-top: 130px; }
+section > h2 { font: 700 32px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; padding-bottom: 10px;
+               border-bottom: 2px solid transparent; border-image: linear-gradient(90deg, rgba(255,255,255,.9) 50%, var(--pink)) 1; }
+section > p.intro { padding: 10px 0; font-size: 13.5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+
+/* every field is a menu row: label left, control right */
+.grid { display: flex; flex-direction: column; }
+.field { display: grid; grid-template-columns: 250px 1fr; gap: 6px 24px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.field > label { font: 600 21px/1.1 var(--hud); letter-spacing: .5px; text-transform: uppercase; }
+.field > small { grid-column: 2; font-size: 12.5px; color: var(--muted); }
+.field.bare > * { grid-column: 1 / -1; }
+
+input[type=text], input[type=number], input[type=password], input[type=time], select {
+  width: 100%; height: 38px; padding: 0 12px; border: 1px solid transparent; border-radius: 10px;
+  background: var(--field); color: var(--text); font: 500 15px var(--ui); color-scheme: dark; }
+input:focus, select:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,79,163,.25); }
+input:disabled { opacity: .45; }
+input[readonly] { color: var(--muted); }
+select option { background: var(--bar); }
+input[type=range] { width: 100%; accent-color: var(--pink); }
+.range { display: flex; align-items: center; gap: 14px; }
+.range output { min-width: 4em; text-align: right; font: 600 20px/1 var(--hud); font-variant-numeric: tabular-nums; }
+
+/* iOS-style switch */
+.check { display: inline-flex; gap: 10px; align-items: center; cursor: pointer; font-size: 14px; }
+.check input { appearance: none; -webkit-appearance: none; flex: none; width: 46px; height: 28px; border-radius: 99px; position: relative; cursor: pointer;
+               background: rgba(255,255,255,.25); transition: background .2s; }
+.check input::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff;
+                      box-shadow: 0 2px 4px rgba(0,0,0,.3); transition: transform .2s; }
+.check input:checked { background: var(--teal); }
+.check input:checked::after { transform: translateX(18px); }
+.inline { display: flex; gap: 8px; align-items: center; }
+.inline > input { flex: 1; min-width: 0; }
+
+button { height: 36px; padding: 0 16px; border: 0; border-radius: 99px; cursor: pointer; white-space: nowrap;
+         background: rgba(255,255,255,.14); color: var(--text); font: 600 14px var(--ui); }
+button:hover { background: rgba(255,255,255,.24); }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.primary { background: #fff; color: #1d1724; }
+button.primary:hover { background: #ffe3f0; }
+button.icon { width: 34px; height: 34px; padding: 0; flex: none; background: rgba(255,255,255,.1); font-size: 13px; }
+button.add { margin-top: 10px; }
+
+.list { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; gap: 8px; align-items: center; }
+.item > input[type=text] { flex: 1; }
+.item select { width: 140px; flex: none; }
+.item img { width: 68px; height: 38px; object-fit: cover; border-radius: 6px; flex: none; background: #000; }
+.item img.broken { opacity: .25; }
+
+/* status badge (install.html folder check) */
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 99px; background: var(--field);
+        font: 600 13px/1.2 var(--ui); color: var(--muted); }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.pill.ok { color: var(--ok); } .pill.warn { color: var(--warn); } .pill.err { color: var(--bad); }
+
+/* readonly value + copy button */
+.copy { display: flex; gap: 8px; align-items: center; }
+.copy > input { flex: 1; min-width: 0; font-family: Consolas, monospace; font-size: 13.5px; }
+.copy > button.done { background: var(--teal); color: #10201e; }
+
+/* numbered steps, styled as menu rows */
+ol.steps { list-style: none; counter-reset: step; }
+ol.steps > li { counter-increment: step; position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 54px; padding: 12px 0 12px 54px;
+                 border-bottom: 1px solid var(--line); font-size: 14.5px; justify-content: center; }
+ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 12px; width: 30px; height: 30px; border-radius: 50%; background: var(--pink);
+                        display: flex; align-items: center; justify-content: center; font: 700 18px/1 var(--hud); }
+ol.steps b { font-weight: 600; }
+
+.tests { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; }
+.tests a { padding: 9px 16px; border-radius: 99px; background: rgba(20,14,28,.38); color: #fff; text-decoration: none; font: 600 18px/1 var(--hud);
+           letter-spacing: .5px; text-transform: uppercase; }
+.tests a:hover { background: var(--pink); }
+.note { font-size: 13px; color: var(--muted); margin-top: 14px; }
+code { font: 12.5px Consolas, monospace; color: #ffd0e6; }
+a { color: #ffd0e6; }
+textarea { width: 100%; min-height: 180px; padding: 10px 12px; border: 1px solid transparent; border-radius: 10px; background: var(--field);
+           color: var(--text); font: 12.5px/1.4 Consolas, monospace; color-scheme: dark; }
+@media (max-width: 680px) {
+  .field { grid-template-columns: 1fr; } .field > small { grid-column: 1; }
+  .actions { margin-left: 0; width: 100%; } .actions button { flex: 1; } .item select { width: 104px; }
+}
+
+/* ============================================================================
+   body.dock — compact variant for the OBS custom browser dock (control.html), 220 px and up
+   ============================================================================ */
+body.dock { padding: 12px; min-width: 220px; font-size: 13.5px; background-attachment: scroll; }
+body.dock h1 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font: 700 20px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; }
+body.dock h1::before { content: ""; width: 3px; height: 18px; border-radius: 2px; background: var(--pink); flex: none; }
+body.dock section { margin-bottom: 10px; padding: 10px; border-radius: 12px; background: var(--field); scroll-margin-top: 0; }
+body.dock label { display: block; margin-bottom: 4px; font: 600 15px/1.1 var(--hud); letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+body.dock input[type=text], body.dock input[type=number], body.dock input[type=password] { height: 32px; padding: 0 10px; border-radius: 8px; font-size: 13.5px;
+  background: rgba(20,14,28,.45); }
+body.dock .field { display: block; padding: 0; border: 0; }
+body.dock .field + .field { margin-top: 8px; }
+body.dock .row { display: flex; gap: 6px; align-items: center; }
+body.dock .row + .row { margin-top: 6px; }
+body.dock .row > input[type=number] { width: 64px; flex: none; }
+body.dock .row .grow { flex: 1; min-width: 0; }
+body.dock .unit { flex: none; font: 600 14px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+body.dock button { flex: 1; min-width: 0; height: 34px; padding: 0 10px; font: 700 16px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; }
+body.dock button.sub  { background: var(--pink); color: #fff; }
+body.dock button.gift { background: var(--orange); color: #2a1606; }
+body.dock button.bits { background: var(--teal); color: #10201e; }
+body.dock button.sub:hover, body.dock button.gift:hover, body.dock button.bits:hover { filter: brightness(1.12); }
+body.dock .check { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--text); font-family: var(--ui); }
+body.dock .check small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+body.dock h1 { white-space: nowrap; }
+body.dock .status { margin-left: auto; min-width: 0; display: flex; align-items: center; gap: 6px; font: 600 14px/1 var(--hud); letter-spacing: .5px; color: var(--muted); }
+body.dock .status #statusText { overflow: hidden; text-overflow: ellipsis; }
+body.dock .dot { flex: none; }
+body.dock .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--bad); }
+body.dock .status.on, body.dock .status.on .dot { color: var(--ok); }
+body.dock .status.on .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+body.dock .log { min-height: 1.4em; margin: 2px 2px 10px; font-size: 12px; color: var(--muted); }
+body.dock .log.err { color: var(--bad); }
+body.dock details summary { cursor: pointer; font: 600 16px/1 var(--hud); letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+body.dock details[open] summary { margin-bottom: 10px; color: var(--text); }
+body.dock .hint { margin-top: 8px; font-size: 11.5px; color: var(--muted); }
