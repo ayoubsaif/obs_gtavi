@@ -79,7 +79,7 @@
       <div class="field">
         <label for="stingers">Transiciones animadas</label>
         <div class="inline"><label class="check"><input type="checkbox" id="stingers"></label><span class="pill" id="stCheck">Sin comprobar</span></div>
-        <small>Los efectos del álbum (zoom, barrido neón, persianas, iris, empuje) con «Misión superada», uno por escena. Primero genéralos en <a href="stingers.html">Transiciones</a>. Desactivado: solo el sonido de «Misión superada».</small>
+        <small>Los efectos del álbum (zoom, barrido neón, persianas, iris, empuje) con el sonido «Misión superada», uno por escena. Primero genéralos en <a href="stingers.html">Transiciones</a>. Desactivado: solo el sonido de «Misión superada» (transición «GTA VI · Solo sonido»).</small>
       </div>
     </div>
   </section>
@@ -276,7 +276,7 @@
     $("assets").value = r ? assetsOf(r) : "";
     $("dockUrl").value = r ? fileUrl(r + "/control.html") : "";
     const vals = { root: r ? r + "/" : "(sin carpeta)", obsFile: C.OBS_FILE, slFile: C.STREAMLABS_FILE, canvas: `${w}x${h}`,
-      trans: $("stingers").checked ? "cada escena tiene su efecto animado (Misión superada · Barrido neón por defecto)" : "«Misión superada» (solo sonido)" };
+      trans: $("stingers").checked ? "cada escena tiene su efecto animado (GTA VI · Barrido neón por defecto)" : "«GTA VI · Solo sonido» (sonido de Misión superada)" };
     document.querySelectorAll("[data-v]").forEach(e => { if (e.dataset.v === "captureStep") e.innerHTML = captureSteps[$("capture").value]; else e.textContent = vals[e.dataset.v] ?? ""; });
     $("captureHint").textContent = $("capture").value === "video"
       ? "Para una capturadora (PS5, Xbox, otro PC) o una cámara a pantalla completa. Su audio va por la propia fuente."

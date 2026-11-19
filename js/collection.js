@@ -20,10 +20,10 @@
   const PAGES = ["starting-soon.html", "starting-soon-cam.html", "ingame.html", "brb.html", "stream-ending.html", "alerts.html"];
   const TRANSITION_SOUND = "sounds/everglades_mission_passed.mp3";   // relative to assetsRoot
   // Animated stingers (made by stingers.html with the album effects from fx.js), saved as assets/stingers/<effect>.webm.
-  // Timeline: the effect covers the screen (inMs), holds the "Misión superada" card (holdMs) while OBS cuts at cutMs,
+  // Timeline: the effect covers the screen (inMs), holds the neon gradient card (holdMs) while OBS cuts at cutMs,
   // then plays back to reveal the new scene (outMs); the sound keeps playing after that.
   const STINGER = {
-    dir: "stingers", prerollMs: 120, inMs: 1000, holdMs: 500, outMs: 1000, cutMs: 1250,   // cutMs: from the start of the animation
+    dir: "stingers", prerollMs: 120, inMs: 400, holdMs: 200, outMs: 400, cutMs: 500,   // cutMs: from the start of the animation
     // effect used when switching TO each scene (OBS has no random transition, so each scene gets its own)
     sceneFx: {
       "GTA VI · Empezamos en breve": "crosszoom",
@@ -37,7 +37,7 @@
   };
   const CAPTURE = { game: "Captura de juego", video: "Capturadora de vídeo" };
   const POINTS_NAME = "Alertas de puntos (enlace externo)";
-  const stingerName = fx => `Misión superada · ${STINGER.names[fx]}`;
+  const stingerName = fx => `GTA VI · ${STINGER.names[fx]}`;
   const CSS = "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }";
 
   function uuid() {
@@ -150,8 +150,10 @@
       [browser("Fin del directo (overlay)", "stream-ending.html"), {}],
     ]);
 
-    // "Misión superada" stinger, audio only: the cut happens at transition_point while the sound plays on
-    const stinger = (name, path, point) => ({
+    // Sound-only stinger (the "Misión superada" sound): the cut happens at transition_point while the sound plays on
+    // preload=false for the WebM stingers: OBS "Preload video to memory" (full_decode) drops the Opus audio
+    // that Chrome MediaRecorder writes (log: "Could not update timestamps for discarded samples"); the mp3 keeps it.
+    const stinger = (name, path, point, preload = true) => ({
       name, id: "obs_stinger_transition",
       settings: {
         path,
@@ -159,10 +161,10 @@
         transition_point: point,
         audio_monitoring: 2,           // monitor and output
         audio_fade_style: 0,
-        preload: true, hw_decode: false,
+        preload, hw_decode: false,
       },
     });
-    const AUDIO_ONLY = "Misión superada";
+    const AUDIO_ONLY = "GTA VI · Solo sonido";
     const transitions = [stinger(AUDIO_ONLY, `${assetsRoot}/${TRANSITION_SOUND}`, 300)];
     let current = AUDIO_ONLY;
 
@@ -170,7 +172,7 @@
     // (OBS per-scene "Transition override", kept in the scene's private settings).
     if (stingers) {
       for (const fx of Object.keys(STINGER.names))
-        transitions.push(stinger(stingerName(fx), `${assetsRoot}/${STINGER.dir}/${fx}.webm`, STINGER.prerollMs + STINGER.cutMs));
+        transitions.push(stinger(stingerName(fx), `${assetsRoot}/${STINGER.dir}/${fx}.webm`, STINGER.prerollMs + STINGER.cutMs, false));
       for (const s of [sStart, sStartCam, sGame, sBrb, sEnd]) {
         const fx = STINGER.sceneFx[s.name];
         if (fx) s.private_settings = { transition: stingerName(fx), transition_duration: 300 };
