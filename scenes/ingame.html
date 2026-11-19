@@ -11,11 +11,17 @@
   /* ---------- Webcam: left column, minimap-style card, 336x189 at x=32, y=600 ----------
      Sits above where GTA VI draws its minimap (bottom-left), with a nav-card label on top. */
   .cam { left: 32px; top: 600px; width: 336px; height: 189px; }
+  /* compact label: channel name only (no live dot / uptime) */
+  .cam .label { height: 40px; }
+  .cam .label .txt { padding: 0 14px; }
+  /* GTA VI logo centered under the cam */
+  .cam .logo { position: absolute; left: 50%; top: calc(100% + 14px); height: 90px; transform: translateX(-50%);
+               filter: drop-shadow(0 6px 16px rgba(0,0,0,.4)); }
 
   /* ---------- Chat above the cam label: phone message bubbles, only while chat is active ---------- */
   .chat-panel {
     --bubble: var(--glass);   /* same translucent card as the channel-name label under it */
-    position: absolute; left: 32px; bottom: 568px; width: 336px; max-height: 300px;
+    position: absolute; left: 32px; bottom: 542px; width: 336px; max-height: 300px;
     padding: 6px 0 2px 8px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; overflow: hidden;
     opacity: 0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 40px); mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
@@ -60,7 +66,8 @@
 
   <div class="cam">
     <div class="frame"></div>
-    <div class="label"><div class="txt"><b data-channel></b><span>En directo · <span id="camUp">00:00</span></span></div><div class="sq"><i></i></div></div>
+    <div class="label"><div class="txt"><b data-channel></b></div></div>
+    <img class="logo" src="../assets/GTAVI_logo.png" alt="Grand Theft Auto VI">
   </div>
 
 <script src="../js/demo-data.js"></script>
@@ -90,10 +97,10 @@
   }
 
   const start = Date.now();
-  const clock = document.getElementById("clock") || {}, up = document.getElementById("uptime") || {}, camUp = document.getElementById("camUp");
+  const clock = document.getElementById("clock") || {}, up = document.getElementById("uptime") || {};
   setInterval(() => {
     const d = new Date(); clock.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
-    up.textContent = camUp.textContent = fmt((Date.now() - start) / 1000);
+    up.textContent = fmt((Date.now() - start) / 1000);
   }, 1000);
 
   const msgs = config.tickerMessages || [], el = document.getElementById("msg"); let i = 0;
